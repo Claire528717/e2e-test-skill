@@ -6,12 +6,12 @@ Use one dedicated Markdown file for the whole test lifecycle. Prefer a filename 
 
 `e2e-test-plan-{feature}-{run_id}.md`
 
-The same file must contain the proposed cases, the data/mock plan, user review status, execution results, bugs, and cleanup status.
+Before execution, the file is an E2E test plan. After the user explicitly authorizes execution and the run starts, append execution results, bugs, and cleanup status to the same file.
 
 ## Test Suite Overview
 
 ```markdown
-# E2E Test Plan and Run Report: {feature/integration}
+# E2E Test Plan: {feature/integration}
 
 Scope:
 - In scope:
@@ -32,6 +32,12 @@ Review Status:
 - Reviewer:
 - Review notes:
 - Last updated:
+
+Execution Authorization:
+- Current status: Not requested / Requested by user / Approved to run / Executed
+- Authorized by:
+- Authorization notes:
+- Authorized at:
 
 Coverage Summary:
 | ID | Priority | Title | Actor | Main UI Path | Independent Verification | Status |
@@ -70,10 +76,10 @@ Data Naming Rule:
 Test Subject Matrix:
 | Subject ID | Account/User | Role | Tenant/Domain | App/Ownership | Permission Purpose | Source |
 |---|---|---|---|---|---|---|
-| U-001 | {employee_a} | Employee | Tenant A | App A owner | Create/manage own assets | Provided / Inferred / To create |
-| U-002 | {domain_admin_a} | Domain admin | Tenant A | - | Review tenant assets | Provided / Inferred / To create |
-| U-003 | {employee_b} | Employee | Tenant B | App B owner | Cross-tenant visibility check | Provided / Inferred / To create |
-| U-004 | {platform_admin} | Platform admin | Global | - | Platform-level operations | Provided / Inferred / To create |
+| U-001 | {primary_actor_account} | {primary_role} | {tenant_or_scope_1} | {owned_resource_or_context} | {primary_workflow_permission} | Provided / Inferred / To create |
+| U-002 | {reviewer_or_admin_account} | {review_or_admin_role} | {tenant_or_scope_1} | {review_context} | {approval_or_management_permission} | Provided / Inferred / To create |
+| U-003 | {restricted_actor_account} | {restricted_role} | {tenant_or_scope_2} | {restricted_context} | {negative_or_isolation_permission} | Provided / Inferred / To create |
+| U-004 | {system_or_integration_actor} | {system_or_integration_role} | {global_or_external_scope} | {integration_context} | {system_verification_permission} | Provided / Inferred / To create |
 
 Product Data:
 | Data ID | Object Type | Name/Key | Created By | Used By Cases | Cleanup Rule |
@@ -248,4 +254,3 @@ Residual Risks:
 Recommendation:
 - {release confidence / fix-before-continue / rerun needed}
 ```
-

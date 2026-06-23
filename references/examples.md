@@ -13,7 +13,7 @@ Context:
 ### Test Suite Excerpt
 
 ```markdown
-# E2E Test Plan and Run Report: Ability API Integration
+# E2E Test Plan: Ability API Integration
 
 Scope:
 - In scope: create ability with API service method, import OpenAPI into API hub, verify product DB and API hub consistency.
@@ -35,6 +35,12 @@ Review Status:
 - Reviewer: Product owner / QA owner
 - Review notes: Pending
 - Last updated: 2026-06-23 14:30
+
+Execution Authorization:
+- Current status: Not requested
+- Authorized by:
+- Authorization notes:
+- Authorized at:
 
 Coverage Summary:
 | ID | Priority | Title | Actor | Main UI Path | Independent Verification | Status |
@@ -217,4 +223,142 @@ Good case detail:
 9. Query API hub by `apihub_group_id` and verify the group exists.
 10. Query API hub interfaces and verify the count and paths match the OpenAPI source file.
 Expected: UI, product DB, and API hub are mutually consistent.
+```
+
+## Example 4: Approval Workflow With Role Visibility
+
+Use this pattern when the PRD describes submit/review/approve/reject flows, state transitions, and role-based visibility.
+
+Context:
+- PRD says a requester can submit a resource request for approval.
+- A reviewer can approve or reject requests in the same tenant or business scope.
+- A requester from another tenant must not see or operate the submitted request.
+- Product database stores request status, requester, reviewer, and audit records.
+
+### Test Suite Excerpt
+
+```markdown
+# E2E Test Plan: Resource Request Approval
+
+Scope:
+- In scope: submit request, reviewer approval, requester status visibility, cross-scope isolation, audit record verification.
+- Out of scope: notification delivery and approval SLA timing.
+
+Environment:
+- Product URL: To be provided
+- Database: product test database
+- External systems: None required for this flow
+- Test accounts: inferred from PRD, to be created or provided before execution
+- Test data run ID: E2E-approval-202606231530-B4Q8
+
+Review Status:
+- Current status: Waiting for user review
+- Reviewer: Product owner / QA owner
+- Review notes: Pending
+- Last updated: 2026-06-23 15:30
+
+Execution Authorization:
+- Current status: Not requested
+- Authorized by:
+- Authorization notes:
+- Authorized at:
+```
+
+### Mock and Data Plan Excerpt
+
+```markdown
+## Mock and Test Data Plan
+
+Run ID:
+- `E2E-approval-202606231530-B4Q8`
+
+Test Subject Matrix:
+| Subject ID | Account/User | Role | Tenant/Domain | App/Ownership | Permission Purpose | Source |
+|---|---|---|---|---|---|---|
+| U-001 | requester_a@example.test | Requester | Scope A | Own request | Submit and view own request | To create |
+| U-002 | reviewer_a@example.test | Reviewer | Scope A | Review queue A | Approve request in scope | To create |
+| U-003 | requester_b@example.test | Requester | Scope B | Own request | Verify cross-scope isolation | To create |
+
+Product Data:
+| Data ID | Object Type | Name/Key | Created By | Used By Cases | Cleanup Rule |
+|---|---|---|---|---|---|
+| D-001 | Resource request | E2E-approval-202606231530-B4Q8 | U-001 | APPROVAL-E2E-001 | Keep if failed; delete or archive if passed |
+
+User Must Provide Before Execution:
+- Product URL or local run command
+- Database read access for request and audit tables
+- Test accounts or permission to create them
+```
+
+### Executable Test Case
+
+```markdown
+### APPROVAL-E2E-001 P0 Submit and approve request with audit trail
+
+Purpose:
+Validate that a requester can submit a request through the UI, an authorized reviewer can approve it, status updates are visible to the requester, and product database status plus audit records are consistent.
+
+Actor:
+- Submitter: requester_a@example.test, Requester, Scope A
+- Reviewer: reviewer_a@example.test, Reviewer, Scope A
+- Restricted actor: requester_b@example.test, Requester, Scope B
+
+Preconditions:
+- U-001 can access the request creation page.
+- U-002 can access the review queue for Scope A.
+- U-003 belongs to a different scope and must not see Scope A requests.
+
+Test Data:
+- Generated request title: `E2E-approval-202606231530-B4Q8`
+- Records to create: one request via UI
+- Data that must be provided by user: product URL, DB read access, accounts or account creation permission
+
+UI Operation Path:
+1. Log in as requester_a@example.test.
+2. Open `Requests`.
+3. Click `New Request`.
+4. Fill request title with `E2E-approval-202606231530-B4Q8`.
+5. Fill required fields according to PRD rules.
+6. Click `Submit`.
+7. Confirm the detail page or list shows status `Pending Review`.
+8. Log out and log in as reviewer_a@example.test.
+9. Open `Review Queue`.
+10. Open the row for `E2E-approval-202606231530-B4Q8`.
+11. Confirm submitted field values match the requester input.
+12. Click `Approve`.
+13. Confirm the request status changes to `Approved`.
+14. Log out and log in as requester_a@example.test.
+15. Open `My Requests` and confirm the same request shows status `Approved`.
+16. Log out and log in as requester_b@example.test.
+17. Search or browse request lists and confirm the Scope A request is not visible.
+
+Independent Verification:
+1. Query product request table by title `E2E-approval-202606231530-B4Q8`.
+2. Verify exactly one request record exists.
+3. Verify requester ID maps to U-001 and reviewer ID maps to U-002.
+4. Verify final status is `Approved`.
+5. Query audit table by request ID.
+6. Verify one submit event and one approve event exist in order.
+7. Verify no permission grant or visibility record exposes the request to U-003 or Scope B.
+
+Expected Results:
+- UI: requester sees pending then approved status; reviewer can approve; restricted actor cannot see the request.
+- Product database: one request record exists with final approved status, correct requester, correct reviewer, and no duplicate records.
+- Audit trail: submit and approve events exist in the correct order.
+- Side effects: no cross-scope visibility leak.
+
+Evidence To Capture:
+- Screenshot of submitted request showing `Pending Review`.
+- Screenshot of reviewer approval screen before approval.
+- Screenshot of requester view showing `Approved`.
+- Screenshot or visible state showing restricted actor cannot find the request.
+- Request record ID and final status.
+- Audit event query excerpt.
+
+Cleanup:
+- If passed, delete/archive the request according to environment rules.
+- If failed or blocked, preserve request and audit records for inspection.
+
+Blocking Decision Rule:
+Stop and ask the user if reviewers cannot access the review queue, approvals do not persist, or cross-scope users can see the request, because those failures invalidate approval workflow coverage.
 ```

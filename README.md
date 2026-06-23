@@ -1,8 +1,10 @@
 # PRD E2E Test Agent
 
-`prd-e2e-test-agent` 是一个面向 Codex/Agent 的端到端测试 Skill，用于根据 PRD 和可视化页面生成高质量 E2E 测试用例，并指导 Agent 像真实测试人员一样执行测试、采集证据、验证数据一致性和输出测试总结。
+`prd-e2e-test-agent` 是一个面向 Codex/Agent 的端到端测试 Skill，用于根据 PRD 和可视化页面生成高质量 E2E 测试用例，并在用户确认测试计划、明确下达执行指令后，指导 Agent 像真实测试人员一样执行测试、采集证据、验证数据一致性和输出测试总结。
 
 它的目标不是简单生成测试点，而是帮助不会写代码的人，在系统开发和联调完成后，以接近专业 QA 的方式完成全局 E2E 验收。
+
+默认行为是先生成可评审的 E2E 测试计划；用户确认或修改计划后，还需要明确要求执行，Agent 才开始真实测试。
 
 ## 适用阶段
 
@@ -21,23 +23,26 @@
 ```text
 prd-e2e-test-agent/
 ├── README.md
-└── prd-e2e-test-agent/
-    ├── SKILL.md
-    ├── agents/
-    │   └── openai.yaml
-    └── references/
-        ├── templates.md
-        └── examples.md
+├── SKILL.md
+├── agents/
+│   └── openai.yaml
+└── references/
+    ├── workflow.md
+    ├── templates.md
+    ├── examples.md
+    └── execution-guardrails.md
 ```
 
 说明：
 
-- 外层 `README.md`：给 GitHub 访客和维护者看的说明文档。
-- 内层 `prd-e2e-test-agent/`：真正可安装、可被 Agent 使用的 Skill 目录。
+- `README.md`：给 GitHub 访客和维护者看的说明文档。
+- 仓库根目录就是可安装、可被 Agent 使用的 Skill 目录。
 - `SKILL.md`：Skill 主说明，定义工作流、执行纪律、数据规则、阻塞策略和输出模式。
 - `agents/openai.yaml`：UI/产品侧元数据，用于展示名称、简介和默认提示词。
+- `references/workflow.md`：详细工作流、依赖发现顺序、测试数据规则和评审门禁。
 - `references/templates.md`：测试计划、测试用例、执行总结等标准模板。
 - `references/examples.md`：高质量测试用例示例，用于约束生成质量。
+- `references/execution-guardrails.md`：执行阶段的证据、阻塞 BUG 和禁止捷径规则。
 
 ## 输入要求
 
@@ -64,11 +69,12 @@ prd-e2e-test-agent/
 3. 发现矛盾：如果 PRD 与页面不一致，或存在逻辑漏洞、状态不可达、预期不清，需要先向用户提问。
 4. 生成测试文件：按模板生成专门的 E2E 测试计划文件，包含用例、mock 数据、测试主体矩阵和依赖清单。
 5. 用户评审：用户确认前不开始执行测试；用户可修改用例、范围、数据或优先级。
-6. 准备数据：创建或准备测试账号、租户、应用、测试文件、外部系统对象等。
-7. 执行测试：严格按照 UI 路径执行，不允许用接口或数据库写入代替用户操作。
-8. 独立验证：通过数据库、API、日志、队列、文件或外部系统验证结果。
-9. 处理 BUG：默认只记录 BUG，不修复；若 BUG 大面积阻塞测试，则暂停并询问用户是否先修复。
-10. 汇总结果：在同一个测试文件中补充执行结果、证据、BUG、修复状态、暂缓项和清理状态。
+6. 执行授权：用户确认或修改测试计划后，需要明确下达执行指令。
+7. 准备数据：创建或准备测试账号、租户、应用、测试文件、外部系统对象等。
+8. 执行测试：严格按照 UI 路径执行，不允许用接口或数据库写入代替用户操作。
+9. 独立验证：通过数据库、API、日志、队列、文件或外部系统验证结果。
+10. 处理 BUG：默认只记录 BUG，不修复；若 BUG 大面积阻塞测试，则暂停并询问用户是否先修复。
+11. 汇总结果：在同一个测试文件中补充执行结果、证据、BUG、修复状态、暂缓项和清理状态。
 
 ## 测试纪律
 
@@ -83,11 +89,10 @@ prd-e2e-test-agent/
 
 ## 安装方式
 
-成熟后可将内层目录复制或安装到 Codex skills 目录：
+成熟后可将本仓库目录复制或安装到 Codex skills 目录：
 
 ```text
-prd-e2e-test-agent/prd-e2e-test-agent
+prd-e2e-test-agent
 ```
 
 当前版本仍建议作为草稿继续迭代，暂不全局安装。
-
