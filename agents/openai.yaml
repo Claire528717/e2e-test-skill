@@ -1,0 +1,4 @@
+interface:
+  display_name: "PRD E2E Test Agent"
+  short_description: "Generate and run PRD-based end-to-end tests"
+  default_prompt: "Use $prd-e2e-test-agent to turn this PRD and UI into executable end-to-end test cases and a test run report."
