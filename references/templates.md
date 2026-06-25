@@ -6,6 +6,8 @@ Use one dedicated Markdown file for the whole test lifecycle. Prefer a filename 
 
 `e2e-test-plan-{feature}-{run_id}.md`
 
+If the user does not specify a path, place the file under `e2e-test-plans/` and store evidence under `e2e-test-evidence/{run_id}/`.
+
 Before execution, the file is an E2E test plan. After the user explicitly authorizes execution and the run starts, append execution results, bugs, and cleanup status to the same file.
 
 ## Test Suite Overview
@@ -26,6 +28,8 @@ Environment:
 - External systems:
 - Test accounts:
 - Test data run ID:
+- Plan file location:
+- Evidence directory:
 
 Review Status:
 - Current status: Draft / Waiting for user review / Approved for execution / Executed
@@ -121,13 +125,18 @@ Test Data:
 - Records to create:
 - Data that must be provided by user:
 
+UI Fidelity Requirement:
+- Each tested user action must start from the same visible affordance a real user would use.
+- Browser automation may click, type, select, drag, drop, confirm, and wait through the UI, but it must not mutate hidden DOM state, invoke component internals, dispatch synthetic product events, seed storage/session state, or call backend APIs to replace the UI action under test.
+- If no visible user path exists for the action, mark the case blocked or failed instead of bypassing the UI.
+
 UI Operation Path:
 1. Open {product/page}.
 2. Log in as {actor}.
 3. Click {visible label}.
 4. Open {page/drawer/modal/tab}.
 5. Fill {field label} with {value}.
-6. Upload {file}.
+6. Perform the next user action through the visible affordance, such as selecting {file}, choosing an option, dragging an item, or confirming a dialog.
 7. Click {button}.
 8. Confirm visible result: {toast/state/list row/detail text}.
 
@@ -146,6 +155,7 @@ Expected Results:
 
 Evidence To Capture:
 - Screenshot or visible state:
+- Evidence file path, such as `e2e-test-evidence/{run_id}/{case_id}-{step}-{short_desc}.png`:
 - Product record ID:
 - External system ID:
 - Request/correlation ID:

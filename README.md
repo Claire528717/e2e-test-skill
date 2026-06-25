@@ -4,6 +4,8 @@
 
 它的目标不是简单生成测试点，而是帮助不会写代码的人，在系统开发和联调完成后，以接近专业 QA 的方式完成全局 E2E 验收。
 
+这是一个开源仓库说明页；真正给 Codex/Agent 使用的规则以 `SKILL.md` 为准。
+
 默认行为是先生成可评审的 E2E 测试计划；用户确认或修改计划后，还需要明确要求执行，Agent 才开始真实测试。
 
 ## 适用阶段
@@ -26,6 +28,10 @@ prd-e2e-test-agent/
 ├── SKILL.md
 ├── agents/
 │   └── openai.yaml
+├── scripts/
+│   ├── create_run_id.py
+│   ├── scaffold_plan.py
+│   └── validate_plan.py
 └── references/
     ├── workflow.md
     ├── templates.md
@@ -39,6 +45,9 @@ prd-e2e-test-agent/
 - 仓库根目录就是可安装、可被 Agent 使用的 Skill 目录。
 - `SKILL.md`：Skill 主说明，定义工作流、执行纪律、数据规则、阻塞策略和输出模式。
 - `agents/openai.yaml`：UI/产品侧元数据，用于展示名称、简介和默认提示词。
+- `scripts/create_run_id.py`：生成标准 E2E run ID。
+- `scripts/scaffold_plan.py`：根据 feature/run ID 生成测试计划骨架，并创建证据目录。
+- `scripts/validate_plan.py`：检查测试计划是否缺少 actor、UI path、verification、evidence、cleanup 等执行必需信息。
 - `references/workflow.md`：详细工作流、依赖发现顺序、测试数据规则和评审门禁。
 - `references/templates.md`：测试计划、测试用例、执行总结等标准模板。
 - `references/examples.md`：高质量测试用例示例，用于约束生成质量。
@@ -96,3 +105,15 @@ prd-e2e-test-agent
 ```
 
 当前版本仍建议作为草稿继续迭代，暂不全局安装。
+
+默认生成的测试计划建议放在 `e2e-test-plans/`，证据放在 `e2e-test-evidence/{run_id}/`，这样更适合开源协作和回归追踪。
+
+## 脚本工具
+
+```bash
+python scripts/create_run_id.py "ability api"
+python scripts/scaffold_plan.py "ability api" --run-id E2E-ability-api-202606241130-A7K2
+python scripts/validate_plan.py e2e-test-plans/e2e-test-plan-ability-api-E2E-ability-api-202606241130-A7K2.md
+```
+
+这些脚本只负责格式稳定性：生成 run ID、创建计划骨架、检查执行必需字段；它们不会替代对 PRD、UI 和业务规则的分析。

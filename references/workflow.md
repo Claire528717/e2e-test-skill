@@ -26,6 +26,19 @@ Search in this order before asking the user for dependency details:
 
 Summarize found and missing dependencies before case design or execution.
 
+## Execution Readiness Check
+
+Before promising real execution, confirm that the environment can:
+
+- Open the target UI or local app.
+- Log in with the needed accounts or create them safely.
+- Perform the required UI actions.
+- Read the independent verification source.
+- Create, modify, or clean test data if the run needs it.
+- Avoid production writes unless the user has explicitly approved them.
+
+If any item is missing, stop at planning and return a dependency request instead of implying that execution is already possible.
+
 ## Coverage Design
 
 Prioritize cases by risk:

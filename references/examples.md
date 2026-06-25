@@ -2,7 +2,21 @@
 
 Use these examples as the quality bar for generated test cases. Do not copy the domain blindly; adapt the actors, UI labels, data names, database fields, and external-system checks to the user's PRD and UI.
 
+## Pattern Index
+
+- **Example 1: External-system synchronization** - Use for UI actions that create or update records in both the product and an external source-of-truth system.
+- **Example 2: Execution result classification** - Use after a run to separate passed first try, passed after fix, failed unrepaired, blocked, skipped, deferred bugs, and cleanup status.
+- **Example 3: Case-detail quality bar** - Use whenever generated cases are too vague or lack exact UI path and independent verification.
+- **Example 4: Multi-role approval and visibility** - Use for submit/review/approve/reject workflows, role boundaries, tenant isolation, and audit trails.
+- **Example 5: Basic data lifecycle** - Use for simple create/edit/delete flows, but split into separate cases when failure localization matters.
+- **Example 6: Permission boundary** - Use for role-specific actions, restricted visibility, and unauthorized access prevention.
+- **Example 7: Async state transition** - Use for queued/background jobs, delayed completion, and backend status verification; add timeout, failure-state, and retry checks when relevant.
+
 ## Example 1: External API Asset Creation
+
+Pattern: External-system synchronization through a user-created product object.
+Use when: a visible UI action creates product data and also creates or syncs data in an external system.
+Do not copy blindly: replace Ability, API Hub, cap-market, and OpenAPI details with the user's actual domain, source of truth, and verification surface.
 
 Context:
 - PRD says users can create an ability and select API as a service method.
@@ -166,6 +180,10 @@ Stop and ask the user if the UI cannot create any ability or if API hub synchron
 
 ## Example 2: Execution Result Entries
 
+Pattern: Post-run result taxonomy and defect accounting.
+Use when: summarizing an executed suite or appending results to the approved test plan.
+Do not copy blindly: keep the categories, but adapt evidence IDs, bug severity, fix status, and release recommendation to the actual run.
+
 Use precise result categories. Do not collapse all failures into a single "failed" bucket.
 
 ```markdown
@@ -200,6 +218,10 @@ Deferred Bugs:
 
 ## Example 3: Bad vs Good Case Detail
 
+Pattern: Quality contrast for vague versus executable E2E cases.
+Use when: generated cases read like generic test points instead of runnable steps.
+Do not copy blindly: preserve the level of specificity, not the API-ability domain.
+
 Bad case detail, too vague:
 
 ```markdown
@@ -226,6 +248,10 @@ Expected: UI, product DB, and API hub are mutually consistent.
 ```
 
 ## Example 4: Approval Workflow With Role Visibility
+
+Pattern: Multi-role state transition with visibility isolation and audit verification.
+Use when: the PRD describes submit/review/approve/reject flows, state transitions, tenant or scope boundaries, and role-based visibility.
+Do not copy blindly: replace requester/reviewer/scope terms with the product's actual actors, authorization model, and audit source.
 
 Use this pattern when the PRD describes submit/review/approve/reject flows, state transitions, and role-based visibility.
 
@@ -361,4 +387,103 @@ Cleanup:
 
 Blocking Decision Rule:
 Stop and ask the user if reviewers cannot access the review queue, approvals do not persist, or cross-scope users can see the request, because those failures invalidate approval workflow coverage.
+```
+
+## Example 5: Simple CRUD With Database Check
+
+Pattern: Basic product-data lifecycle.
+Use when: validating simple create, edit, delete, list, or detail consistency.
+Do not copy blindly: split create/edit/delete into separate cases when each step has distinct risk, permissions, or failure handling.
+
+Context:
+- PRD says a user can create, edit, and delete a basic record from the UI.
+- The product database is the source of truth.
+
+Good case shape:
+
+```markdown
+### CRUD-E2E-001 P0 Create record and verify persistence
+
+Purpose:
+Validate that a record created through the UI appears in the list, persists in the database, and can be edited and removed through the UI.
+
+Actor:
+- Account: user_a@example.test
+- Role/permissions: standard user with create/edit/delete access
+- Tenant/domain: Tenant A
+
+UI Operation Path:
+1. Open the record list page.
+2. Click `New`.
+3. Fill the required fields.
+4. Click `Save`.
+5. Confirm the new row appears.
+6. Open the row and edit one field.
+7. Save again.
+8. Delete the row through the UI.
+
+Independent Verification:
+1. Query the product database by the generated record key.
+2. Verify the create, edit, and delete states match the UI flow.
+```
+
+## Example 6: Permission Boundary With Restricted Actor
+
+Pattern: Permission boundary and negative authorization.
+Use when: a capability is available to one actor but hidden, disabled, or blocked for another actor.
+Do not copy blindly: include deep-link, search-result, detail-page, or API-independent verification when the product can expose resources outside the main list UI.
+
+Context:
+- PRD says admins can manage a resource, but ordinary users can only view it.
+
+Good case shape:
+
+```markdown
+### PERM-E2E-001 P0 Admin-only action is hidden from ordinary user
+
+Purpose:
+Validate that a restricted user cannot see or use an admin-only action, while an admin can.
+
+Actor:
+- Admin: admin_a@example.test
+- Restricted user: user_b@example.test
+
+UI Operation Path:
+1. Log in as the admin and confirm the action exists.
+2. Log out and log in as the restricted user.
+3. Open the same page.
+4. Confirm the action is hidden or disabled.
+
+Independent Verification:
+1. Check the permission table or audit log.
+2. Verify no unauthorized grant exists for the restricted user.
+```
+
+## Example 7: Async Status Change With Independent Check
+
+Pattern: Asynchronous processing and eventual state consistency.
+Use when: a UI submission triggers queued, delayed, callback, webhook, or background processing.
+Do not copy blindly: add timeout, polling interval, intermediate states, failure states, retry behavior, duplicate-submit protection, and cleanup rules when relevant.
+
+Context:
+- PRD says submitting a job creates a queued task that completes later.
+
+Good case shape:
+
+```markdown
+### ASYNC-E2E-001 P1 Submit job and verify completion signal
+
+Purpose:
+Validate that a UI submission creates the job, the status changes after processing, and the backend record matches the final state.
+
+UI Operation Path:
+1. Open the job form.
+2. Submit a valid job.
+3. Confirm the UI shows queued or processing.
+4. Refresh or reopen until the final state appears.
+
+Independent Verification:
+1. Query the job table or queue by the generated job ID.
+2. Verify the status transitioned from queued to completed.
+3. Check the log or callback record if the PRD requires it.
 ```
