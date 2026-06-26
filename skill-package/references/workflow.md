@@ -1,4 +1,4 @@
-# PRD E2E Test Agent Workflow
+﻿# E2E Test Skill Workflow
 
 Use this reference when the task spans both case design and execution, or when the user asks for detailed E2E planning.
 

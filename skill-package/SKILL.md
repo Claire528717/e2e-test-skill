@@ -1,9 +1,9 @@
----
-name: prd-e2e-test-agent
+﻿---
+name: skill-package
 description: "Design PRD-driven end-to-end acceptance test plans from product requirements and real UI sources. Use when Codex needs to turn a PRD, screenshots, prototype, HTML, frontend code, or other visual UI source into executable E2E test cases with realistic UI paths, mock/test data plans, review gates, and independent database/API/external-system verification. Also use for Chinese-language requests such as \u9a8c\u6536\u6d4b\u8bd5, \u7aef\u5230\u7aef\u6d4b\u8bd5, E2E \u7528\u4f8b, \u6d4b\u8bd5\u8ba1\u5212, or \u6839\u636e\u9875\u9762\u751f\u6210\u6d4b\u8bd5\u7528\u4f8b after development and integration are complete. Execute cases, collect evidence, handle bugs, and produce run summaries only after the user approves the plan and explicitly asks to run it."
 ---
 
-# PRD E2E Test Agent
+# E2E Test Skill
 
 ## Default Behavior
 

@@ -1,4 +1,4 @@
-# PRD E2E Test Agent Templates
+﻿# E2E Test Skill Templates
 
 ## Dedicated Test File
 
