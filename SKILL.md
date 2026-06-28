@@ -11,7 +11,9 @@ Default to **case design only**. Create a dedicated E2E test plan file and stop 
 
 Start execution only after the user confirms or modifies the test plan and then gives an explicit instruction to run it.
 
-If the user's request does not include accounts, roles, tenants, or permissions, infer a mock test subject matrix from the PRD for planning. Treat those mock subjects as data requirements before execution; do not pretend they already exist unless the environment can create or provide them.
+This is not a 100% automatic testing tool. Think through whether missing dependencies can be reasonably discovered, created, or mocked in the current project before asking the user. If a critical dependency cannot be solved honestly, explain the gap, its impact, and the next decision in plain non-technical language. Do not bypass UI paths, fabricate evidence, or pretend a missing environment, account, permission, or verification source exists.
+
+If the user's request does not include accounts, roles, tenants, or permissions, infer a mock test subject matrix from the PRD for planning. For local test execution, assume these subjects usually must be mocked or created unless the user provides real test subjects. Record every mock subject, role, tenant, permission, data object, source, scope, and cleanup rule in the plan. Treat inferred mock subjects as data requirements before execution; do not pretend they already exist unless the environment can create or provide them.
 
 Run execution only when the current environment has the required URL, accounts or creatable test subjects, data permissions, and verification access.
 
@@ -31,6 +33,7 @@ Require:
 - PRD or equivalent product requirements.
 - Visual UI source: screenshots, prototype, HTML, running product, or frontend code that exposes real operation paths.
 - If the user is a non-technical product manager, translate their goal into a short test brief first: target feature, PRD source, UI source, roles, environment, allowed test data actions, and what must be independently verified.
+- Explain dependency gaps, mock assumptions, blocked cases, and user decisions in plain language for non-technical users.
 
 For execution, also require or discover:
 
@@ -39,7 +42,7 @@ For execution, also require or discover:
 - Database/API/log/external-system access for independent verification.
 - Permission boundaries for creating, editing, deleting, and cleaning test data.
 
-For planning, infer missing accounts, roles, tenants, permissions, apps, and test files as mock data when the PRD provides enough clues. Ask only for missing items that block planning or real execution.
+For planning, infer missing accounts, roles, tenants, permissions, apps, and test files as mock data when the PRD provides enough clues. Ask only for missing items that block planning or real execution. For local execution, prefer isolated mock data and clearly documented mock scope over asking non-technical users to manually provide users, roles, tenants, and permission records.
 
 Prefer to keep one run focused on one feature slice or one integration boundary.
 
@@ -49,6 +52,7 @@ Prefer to keep one run focused on one feature slice or one integration boundary.
    - Read the PRD and UI source enough to identify actors, objects, states, rules, operation paths, and integrations.
    - Search the workspace for dependency clues before asking the user: docs, routes, API clients, `.env*`, mocks, fixtures, tests, schema/migrations, OpenAPI/Swagger, SDKs, and local run scripts.
    - Summarize what was found and what is still missing.
+   - Decide whether each missing dependency can be reasonably solved by project docs, local setup, safe mock data, or generated test files before asking the user.
    - If execution is requested, verify that the environment can actually perform UI interaction and independent verification before promising a run.
 
 2. **Analyze**
@@ -62,7 +66,7 @@ Prefer to keep one run focused on one feature slice or one integration boundary.
    - Include actor, preconditions, data setup, exact UI path, independent verification, expected result, evidence, cleanup, and blocking rule for each executable case.
    - Write the suite to one dedicated Markdown file using `references/templates.md`.
    - Use `references/examples.md` as the quality bar when cases risk becoming vague or when external-system verification is involved.
-   - Include the inferred or provided test subject matrix and data/mock plan before execution.
+   - Include the inferred or provided test subject matrix and a mock/data scope record before execution.
    - Ask the user to review or modify the file before executing.
 
 4. **Execute Only After Approval**

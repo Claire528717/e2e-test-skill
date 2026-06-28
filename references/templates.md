@@ -64,6 +64,8 @@ Missing:
 Execution Impact:
 - {what can run now}
 - {what is blocked until user provides data}
+- Plain-language explanation for non-technical reviewers:
+  - {what this means and what decision is needed}
 ```
 
 ## Mock and Test Data Plan
@@ -76,6 +78,11 @@ Run ID:
 
 Data Naming Rule:
 - `{prefix}-{feature}-{timestamp}-{short_random}`
+
+Mock Scope:
+| Mock Item | Type | Why Needed | Source | Creation Method | Used By Cases | Cleanup / Preserve Rule |
+|---|---|---|---|---|---|---|
+| M-001 | User / Role / Tenant / Permission / App / Product data / File / External object | {purpose} | Inferred from PRD / Generated / Project fixture / Provided | {how to create or provide it} | {case IDs} | Delete if passed / Preserve if failed / Manual cleanup |
 
 Test Subject Matrix:
 | Subject ID | Account/User | Role | Tenant/Domain | App/Ownership | Permission Purpose | Source |
@@ -99,6 +106,11 @@ External System Data:
 
 User Must Provide Before Execution:
 - {only items that cannot be inferred or safely mocked}
+
+Plain-Language Notes:
+- {which data is mocked and why}
+- {which missing items block execution}
+- {what can still be designed or tested without those items}
 ```
 
 ## Executable Test Case

@@ -26,6 +26,16 @@ Search in this order before asking the user for dependency details:
 
 Summarize found and missing dependencies before case design or execution.
 
+Before asking the user, decide whether each missing item can be reasonably handled by:
+
+- reading project documentation or source code,
+- using local setup scripts, fixtures, seeds, or mocks,
+- creating isolated mock users, roles, tenants, permissions, apps, files, or product data,
+- generating non-sensitive test files,
+- downgrading the affected case to planning-only or blocked.
+
+If a missing dependency cannot be honestly solved, explain it plainly. Do not work around it by bypassing UI actions, inventing credentials, writing database state that the UI should create, faking verification, or claiming that an unverified result passed.
+
 ## Execution Readiness Check
 
 Before promising real execution, confirm that the environment can:
@@ -38,6 +48,8 @@ Before promising real execution, confirm that the environment can:
 - Avoid production writes unless the user has explicitly approved them.
 
 If any item is missing, stop at planning and return a dependency request instead of implying that execution is already possible.
+
+Local test environments often do not come with ready-made users, roles, tenants, or permissions. For local execution, prefer creating or using isolated mock subjects when the project supports it. If the project cannot create or mock those subjects safely, mark the affected execution blocked and document exactly what is missing.
 
 ## Coverage Design
 
@@ -79,6 +91,8 @@ Rules:
 - When the user does not provide accounts, tenants, roles, permissions, apps, or files, infer a mock test subject matrix from the PRD for planning.
 - Treat inferred accounts, tenants, roles, permissions, apps, or files as planning requirements until the environment can create or provide them.
 - Do not start real execution from inferred subjects unless the environment supports creating or mocking those subjects.
+- Record the mock scope: which users, roles, tenants, permissions, apps, product records, files, and external objects are mocked; why they are needed; how they will be created; which cases use them; and how they will be cleaned up or preserved.
+- For local testing, treat mock users, roles, tenants, permissions, and app ownership as the default path unless real test subjects are already provided.
 - Preserve failed or blocked case data until the user decides whether to inspect or clean it.
 - Clean passed-case data when safe, or document why it must be retained.
 - Never use real sensitive personal, financial, credential, or production customer data as mock data.
@@ -90,6 +104,7 @@ Before execution, create or update one dedicated test file that contains:
 - Scope and assumptions.
 - Dependency discovery result.
 - Mock/data plan.
+- Mock scope and assumptions, including anything inferred from the PRD.
 - Test subject matrix for accounts, roles, tenants, apps, and permissions.
 - Full executable test cases.
 - User review status and requested changes.
@@ -106,6 +121,15 @@ After execution, append results to the same file:
 - Cleanup status.
 
 Use a separate report only when the user requests one or the file would become too large to read.
+
+## User-Facing Communication
+
+Use plain language for non-technical users:
+
+- Say "I can design the cases, but I cannot run these cases yet because..." instead of using only infrastructure jargon.
+- Separate "what I found", "what I assumed or mocked", "what is missing", "what can still be tested", and "what decision I need from you".
+- Do not hide blocked execution behind vague wording such as "environment issue" or "dependency problem".
+- When mock data is used, state that it is test-only data and list the affected users, roles, tenants, permissions, files, and records.
 
 ## Terms
 
