@@ -1,4 +1,4 @@
-﻿# Execution Guardrails
+# Execution Guardrails
 
 Read this reference before executing approved E2E cases or deciding whether to continue after a bug.
 

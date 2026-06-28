@@ -1,4 +1,4 @@
-﻿# E2E Test Skill Examples
+# E2E Test Skill Examples
 
 Use these examples as the quality bar for generated test cases. Do not copy the domain blindly; adapt the actors, UI labels, data names, database fields, and external-system checks to the user's PRD and UI.
 

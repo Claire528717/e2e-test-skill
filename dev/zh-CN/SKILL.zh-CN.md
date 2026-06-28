@@ -1,5 +1,5 @@
-﻿---
-name: skill-package
+---
+name: e2e-test-skill
 description: "根据 PRD 和真实 UI 来源设计端到端验收测试计划。当 Codex 需要把 PRD、截图、原型、HTML、前端代码或其他可视化 UI 来源转化为可执行的 E2E 测试用例时使用；测试用例应包含真实 UI 操作路径、mock/测试数据计划、评审门禁，以及数据库/API/外部系统等独立验证方式。也适用于中文请求，例如验收测试、端到端测试、E2E 用例、测试计划、根据页面生成测试用例等，前提是开发和联调已经完成。只有在用户批准测试计划并明确要求执行后，才执行用例、收集证据、处理 BUG 并输出运行总结。"
 ---
 
@@ -102,9 +102,9 @@ description: "根据 PRD 和真实 UI 来源设计端到端验收测试计划。
 
 当需要稳定的文件布局或格式校验时，使用内置脚本：
 
-- 运行 `python scripts/create_run_id.py "{feature}"` 生成标准 run ID。
-- 运行 `python scripts/scaffold_plan.py "{feature}" --run-id "{run_id}"` 创建默认测试计划文件和证据目录。
-- 在请求用户评审或执行前，运行 `python scripts/validate_plan.py "{plan_path}"`；如果缺少 actor、UI path、独立验证、证据或清理信息，先修正后再继续。
+- 运行 `python3 scripts/create_run_id.py "{feature}"` 生成标准 run ID。
+- 运行 `python3 scripts/scaffold_plan.py "{feature}" --run-id "{run_id}"` 创建默认测试计划文件和证据目录。
+- 在请求用户评审或执行前，运行 `python3 scripts/validate_plan.py "{plan_path}"`；如果缺少 actor、UI path、独立验证、证据或清理信息，先修正后再继续。
 
 ## 输出模式
 

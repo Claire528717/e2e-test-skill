@@ -1,4 +1,4 @@
-﻿# E2E Test Skill Templates
+# E2E Test Skill Templates
 
 ## Dedicated Test File
 
@@ -32,7 +32,7 @@ Environment:
 - Evidence directory:
 
 Review Status:
-- Current status: Draft / Waiting for user review / Approved for execution / Executed
+- Current status: Draft / Waiting for user review / Approved / Changes requested / Executed
 - Reviewer:
 - Review notes:
 - Last updated:

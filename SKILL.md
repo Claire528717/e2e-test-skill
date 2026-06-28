@@ -1,5 +1,5 @@
-﻿---
-name: skill-package
+---
+name: e2e-test-skill
 description: "Design PRD-driven end-to-end acceptance test plans from product requirements and real UI sources. Use when Codex needs to turn a PRD, screenshots, prototype, HTML, frontend code, or other visual UI source into executable E2E test cases with realistic UI paths, mock/test data plans, review gates, and independent database/API/external-system verification. Also use for Chinese-language requests such as \u9a8c\u6536\u6d4b\u8bd5, \u7aef\u5230\u7aef\u6d4b\u8bd5, E2E \u7528\u4f8b, \u6d4b\u8bd5\u8ba1\u5212, or \u6839\u636e\u9875\u9762\u751f\u6210\u6d4b\u8bd5\u7528\u4f8b after development and integration are complete. Execute cases, collect evidence, handle bugs, and produce run summaries only after the user approves the plan and explicitly asks to run it."
 ---
 
@@ -93,9 +93,9 @@ Prefer to keep one run focused on one feature slice or one integration boundary.
 
 Use bundled scripts when deterministic file layout or validation helps:
 
-- Run `python scripts/create_run_id.py "{feature}"` to generate a standard run ID.
-- Run `python scripts/scaffold_plan.py "{feature}" --run-id "{run_id}"` to create the default plan file and evidence directory.
-- Run `python scripts/validate_plan.py "{plan_path}"` before asking for review or before execution; fix missing actor, UI path, independent verification, evidence, or cleanup sections before proceeding.
+- Run `python3 scripts/create_run_id.py "{feature}"` to generate a standard run ID.
+- Run `python3 scripts/scaffold_plan.py "{feature}" --run-id "{run_id}"` to create the default plan file and evidence directory.
+- Run `python3 scripts/validate_plan.py "{plan_path}"` before asking for review or before execution; fix missing actor, UI path, independent verification, evidence, or cleanup sections before proceeding.
 
 ## Output Modes
 

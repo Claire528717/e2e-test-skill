@@ -1,0 +1,4 @@
+interface:
+  display_name: "E2E Test Skill"
+  short_description: "为 PRD 和页面生成端到端验收测试计划"
+  default_prompt: "Use $e2e-test-skill to turn this PRD and UI into a reviewable E2E test plan with realistic UI paths, mock data needs, independent verification, and a clear run file layout. Stop for my review before execution."

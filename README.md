@@ -1,10 +1,10 @@
-﻿# E2E Test Skill
+# E2E Test Skill
 
-`skill-package` 是一个面向 Codex/Agent 的端到端测试 Skill，用于根据 PRD 和可视化页面生成高质量 E2E 测试用例，并在用户确认测试计划、明确下达执行指令后，指导 Agent 像真实测试人员一样执行测试、采集证据、验证数据一致性和输出测试总结。
+`e2e-test-skill` 是一个面向 Codex/Agent 的端到端测试 Skill，用于根据 PRD 和可视化页面生成高质量 E2E 测试用例，并在用户确认测试计划、明确下达执行指令后，指导 Agent 像真实测试人员一样执行测试、采集证据、验证数据一致性和输出测试总结。
 
 它的目标不是简单生成测试点，而是帮助不会写代码的人，在系统开发和联调完成后，以接近专业 QA 的方式完成全局 E2E 验收。
 
-这是一个开源仓库说明页；真正给 Codex/Agent 使用的规则以 `skill-package/SKILL.md` 为准。
+这是一个开源仓库说明页；仓库根目录就是正式 Skill 入口，给 Codex/Agent 使用的规则以 `SKILL.md` 为准。
 
 默认行为是先生成可评审的 E2E 测试计划；用户确认或修改计划后，还需要明确要求执行，Agent 才开始真实测试。
 
@@ -25,37 +25,39 @@
 ```text
 e2e-test-skill/
 ├── README.md
+├── SKILL.md
+├── agents/
+│   └── openai.yaml
+├── references/
+│   ├── workflow.md
+│   ├── templates.md
+│   ├── examples.md
+│   └── execution-guardrails.md
+├── scripts/
+│   ├── create_run_id.py
+│   ├── scaffold_plan.py
+│   └── validate_plan.py
 ├── dev/
 │   └── zh-CN/
-└── skill-package/
-    ├── SKILL.md
-    ├── agents/
-    │   └── openai.yaml
-    ├── scripts/
-    │   ├── create_run_id.py
-    │   ├── scaffold_plan.py
-    │   └── validate_plan.py
-    └── references/
-        ├── workflow.md
-        ├── templates.md
-        ├── examples.md
-        └── execution-guardrails.md
+├── e2e-test-plans/        # generated, ignored
+└── e2e-test-evidence/     # generated, ignored
 ```
 
 说明：
 
 - `README.md`：给 GitHub 访客和维护者看的说明文档。
-- `dev/`：开发过程中的本地资料与草稿内容，不作为正式 Skill 安装包的一部分。
-- `skill-package/`：可安装、可被 Agent 使用的 Skill 目录。
-- `skill-package/SKILL.md`：Skill 主说明，定义工作流、执行纪律、数据规则、阻塞策略和输出模式。
-- `skill-package/agents/openai.yaml`：UI/产品侧元数据，用于展示名称、简介和默认提示词。
-- `skill-package/scripts/create_run_id.py`：生成标准 E2E run ID。
-- `skill-package/scripts/scaffold_plan.py`：根据 feature/run ID 生成测试计划骨架，并创建证据目录。
-- `skill-package/scripts/validate_plan.py`：检查测试计划是否缺少 actor、UI path、verification、evidence、cleanup 等执行必需信息。
-- `skill-package/references/workflow.md`：详细工作流、依赖发现顺序、测试数据规则和评审门禁。
-- `skill-package/references/templates.md`：测试计划、测试用例、执行总结等标准模板。
-- `skill-package/references/examples.md`：高质量测试用例示例，用于约束生成质量。
-- `skill-package/references/execution-guardrails.md`：执行阶段的证据、阻塞 BUG 和禁止捷径规则。
+- `SKILL.md`：Skill 主说明，定义工作流、执行纪律、数据规则、阻塞策略和输出模式。
+- `agents/openai.yaml`：UI/产品侧元数据，用于展示名称、简介和默认提示词。
+- `references/workflow.md`：详细工作流、依赖发现顺序、测试数据规则和评审门禁。
+- `references/templates.md`：测试计划、测试用例、执行总结等标准模板。
+- `references/examples.md`：高质量测试用例示例，用于约束生成质量。
+- `references/execution-guardrails.md`：执行阶段的证据、阻塞 BUG 和禁止捷径规则。
+- `scripts/create_run_id.py`：生成标准 E2E run ID。
+- `scripts/scaffold_plan.py`：根据 feature/run ID 生成测试计划骨架，并创建证据目录。
+- `scripts/validate_plan.py`：检查测试计划是否缺少 actor、UI path、verification、evidence、cleanup 等执行必需信息。
+- `dev/`：开发过程中的维护资料和中文阅读版，建议纳入版本控制，方便在不同电脑之间同步；它不作为正式 Skill 入口。
+- `e2e-test-plans/`：Skill 运行时生成的测试计划目录，属于输出产物，不建议提交。
+- `e2e-test-evidence/`：Skill 运行时生成的截图、记录和验证证据目录，属于输出产物，不建议提交。
 
 ## 输入要求
 
@@ -102,22 +104,24 @@ e2e-test-skill/
 
 ## 安装方式
 
-成熟后可将 `skill-package/` 目录复制或安装到 Codex skills 目录，并命名为：
+通过 GitHub 安装时，直接安装仓库根目录。根目录包含 `SKILL.md`、`references/`、`scripts/` 和 `agents/`，不需要再指定子目录。
+
+建议安装后的 Skill 名称使用：
 
 ```text
-skill-package
+e2e-test-skill
 ```
 
-当前版本仍建议作为草稿继续迭代，暂不全局安装。
-
 默认生成的测试计划建议放在 `e2e-test-plans/`，证据放在 `e2e-test-evidence/{run_id}/`，这样更适合开源协作和回归追踪。
+
+这些运行产物默认会被 `.gitignore` 忽略；如果某次验收结果需要长期归档，建议单独挑选报告或证据文件提交，而不是把整个输出目录加入版本控制。
 
 ## 脚本工具
 
 ```bash
-python skill-package/scripts/create_run_id.py "ability api"
-python skill-package/scripts/scaffold_plan.py "ability api" --run-id E2E-ability-api-202606241130-A7K2
-python skill-package/scripts/validate_plan.py e2e-test-plans/e2e-test-plan-ability-api-E2E-ability-api-202606241130-A7K2.md
+python3 scripts/create_run_id.py "ability api"
+python3 scripts/scaffold_plan.py "ability api" --run-id E2E-ability-api-202606241130-A7K2
+python3 scripts/validate_plan.py e2e-test-plans/e2e-test-plan-ability-api-E2E-ability-api-202606241130-A7K2.md
 ```
 
 这些脚本只负责格式稳定性：生成 run ID、创建计划骨架、检查执行必需字段；它们不会替代对 PRD、UI 和业务规则的分析。
