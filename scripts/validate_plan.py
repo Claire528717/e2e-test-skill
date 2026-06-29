@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate that an E2E test plan has executable case essentials."""
+"""Validate that an E2E test plan has executable case essentials and PRD coverage gates."""
 
 from __future__ import annotations
 
@@ -36,6 +36,22 @@ UI_FIDELITY_VIOLATIONS = {
 
 LIST_PREFIX_PATTERN = re.compile(r"^\s*(?:[-*]\s+|\d+\.\s+)?")
 PLACEHOLDER_TOKEN_PATTERN = re.compile(r"\{\{[^{}]+\}\}|\{[^{}]+\}")
+CASE_ID_PATTERN = re.compile(r"\b[A-Z][A-Z0-9]+(?:-[A-Z0-9]+)*-\d{3,}\b")
+COVERAGE_SECTION_PATTERN = re.compile(
+    r"^##\s+(?:PRD Coverage Audit|PRD 全量覆盖审计|Requirement Coverage Matrix|需求覆盖矩阵)\s*$",
+    re.M,
+)
+COVERAGE_ROW_PATTERN = re.compile(r"^\|(?P<row>.*)\|\s*$", re.M)
+PRD_SIGNAL_TERMS = (
+    "prd",
+    "需求",
+    "验收口径",
+    "acceptance",
+    "must",
+    "必须实现",
+    "覆盖矩阵",
+)
+COVERED_STATUSES = {"covered", "已覆盖"}
 
 
 @dataclass
@@ -104,6 +120,53 @@ def section_status(value: str | None) -> tuple[bool, bool]:
     return has_content, has_placeholder
 
 
+def is_separator_row(row: str) -> bool:
+    stripped = row.replace("|", "").strip()
+    return bool(stripped) and set(stripped) <= {"-", ":"}
+
+
+def validate_coverage(markdown: str, case_ids: set[str]) -> list[str]:
+    issues: list[str] = []
+    lowered = markdown.lower()
+    has_prd_signal = any(term.lower() in lowered for term in PRD_SIGNAL_TERMS)
+    has_coverage_section = bool(COVERAGE_SECTION_PATTERN.search(markdown))
+
+    if has_prd_signal and not has_coverage_section:
+        issues.append(
+            "Missing PRD coverage audit. Add '## PRD Coverage Audit', '## PRD 全量覆盖审计', "
+            "'## Requirement Coverage Matrix', or '## 需求覆盖矩阵' with requirement-to-case mapping."
+        )
+        return issues
+
+    if not has_coverage_section:
+        return issues
+
+    covered_rows = 0
+    for row_match in COVERAGE_ROW_PATTERN.finditer(strip_fenced_blocks(markdown)):
+        row = row_match.group("row")
+        cells = [cell.strip() for cell in row.split("|")]
+        if len(cells) < 4 or is_separator_row(row):
+            continue
+        row_lower = row.lower()
+        if "coverage" in row_lower and "case" in row_lower:
+            continue
+        covered_status = any(cell.lower() in COVERED_STATUSES for cell in cells)
+        if not covered_status:
+            continue
+        covered_rows += 1
+        ids = set(CASE_ID_PATTERN.findall(row))
+        if not ids:
+            issues.append(f"Coverage row marked covered has no case ID: {row.strip()}")
+            continue
+        missing_ids = sorted(ids - case_ids)
+        if missing_ids:
+            issues.append(f"Coverage row references missing case ID(s) {missing_ids}: {row.strip()}")
+
+    if covered_rows == 0:
+        issues.append("PRD coverage audit exists but has no rows marked Covered/已覆盖 with case IDs.")
+    return issues
+
+
 def validate_plan(path: Path) -> list[str]:
     markdown = path.read_text(encoding="utf-8")
     issues: list[str] = []
@@ -111,6 +174,14 @@ def validate_plan(path: Path) -> list[str]:
     if not cases:
         issues.append("No executable test cases found. Add at least one '### CASE-ID Priority Title' section.")
         return issues
+
+    case_ids: set[str] = set()
+    for case in cases:
+        match = CASE_ID_PATTERN.search(case.heading)
+        if match:
+            case_ids.add(match.group(0))
+
+    issues.extend(validate_coverage(markdown, case_ids))
 
     for case in cases:
         case_body_lower = case.body.lower()
@@ -133,7 +204,7 @@ def validate_plan(path: Path) -> list[str]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Validate an E2E test plan scaffold.")
+    parser = argparse.ArgumentParser(description="Validate that an E2E test plan has executable cases and PRD coverage gates.")
     parser.add_argument("plan", type=Path, help="Path to the Markdown test plan.")
     return parser
 
@@ -142,7 +213,7 @@ def main() -> int:
     args = build_parser().parse_args()
     issues = validate_plan(args.plan)
     if not issues:
-        print(f"OK: {args.plan} contains required executable case sections.")
+        print(f"OK: {args.plan} contains required executable case sections and PRD coverage gates.")
         return 0
 
     print(f"FAILED: {args.plan} has {len(issues)} issue(s).")

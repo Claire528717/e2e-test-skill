@@ -11,11 +11,30 @@ Default to **case design only**. Create a dedicated E2E test plan file and stop 
 
 Start execution only after the user confirms or modifies the test plan and then gives an explicit instruction to run it.
 
+Use three user decision gates:
+
+1. **Case review gate**: the user reviews test case quality, PRD coverage completeness, high-risk markers, assumptions, and data needs to decide whether to execute E2E. Do not frame this gate as final release acceptance or as approval that the execution environment is ready.
+2. **Blocking-bug gate**: during execution, stop for the user's decision when a blocking bug prevents the current case, blocks broad follow-on coverage, or makes required verification unreliable.
+3. **Result-and-fix gate**: after the run, show results, bugs, evidence, cleanup status, and residual risks so the user can decide whether to fix all bugs, defer some bugs, rerun failed/blocked cases, and review the final fix result.
+
+For PRD-backed requests, default to **PRD coverage completeness**, not a representative happy-path suite. Extract the PRD's explicit must-have items, acceptance criteria, role permissions, business rules, state transitions, exception/empty states, data consistency rules, and declared non-functional or SLA items into a coverage audit before finalizing cases. Do not leave a PRD item only implied by a case; map every item to one of:
+
+- Covered by executable E2E case.
+- Partially covered, with the missing branch named.
+- Blocked by missing decision, account, environment, system, or verification source.
+- Out of E2E scope / requires specialty test such as performance, security, or load testing.
+
+If the user asks for a narrow slice, clearly label the plan as a focused slice and include a brief uncovered-PRD summary. Do not present a focused slice as a full release acceptance plan.
+
+Mark high-risk PRD items separately from coverage status. A high-risk item can still be covered, partially covered, blocked, or specialty; risk level explains business impact and execution priority, not whether the item is structurally valid.
+
 This is not a 100% automatic testing tool. Think through whether missing dependencies can be reasonably discovered, created, or mocked in the current project before asking the user. If a critical dependency cannot be solved honestly, explain the gap, its impact, and the next decision in plain non-technical language. Do not bypass UI paths, fabricate evidence, or pretend a missing environment, account, permission, or verification source exists.
 
 If the user's request does not include accounts, roles, tenants, or permissions, infer a mock test subject matrix from the PRD for planning. For local test execution, assume these subjects usually must be mocked or created unless the user provides real test subjects. Record every mock subject, role, tenant, permission, data object, source, scope, and cleanup rule in the plan. Treat inferred mock subjects as data requirements before execution; do not pretend they already exist unless the environment can create or provide them.
 
 Run execution only when the current environment has the required URL, accounts or creatable test subjects, data permissions, and verification access.
+
+After the user explicitly asks to execute E2E, first refresh the execution readiness and independent verification plan against the now-provided URL, database/API/log/external-system access, account matrix, and cleanup permissions. Update the test plan before running if any verification path is vague, stale, unavailable, or no longer independent.
 
 ## Core Rule
 
@@ -50,6 +69,7 @@ Prefer to keep one run focused on one feature slice or one integration boundary.
 
 1. **Discover**
    - Read the PRD and UI source enough to identify actors, objects, states, rules, operation paths, and integrations.
+   - Build a PRD coverage inventory from must/shall/checklist items, acceptance criteria, role and permission matrices, business rules, state machines, exception and empty states, data fields, integration contracts, and non-functional requirements.
    - Search the workspace for dependency clues before asking the user: docs, routes, API clients, `.env*`, mocks, fixtures, tests, schema/migrations, OpenAPI/Swagger, SDKs, and local run scripts.
    - Summarize what was found and what is still missing.
    - Decide whether each missing dependency can be reasonably solved by project docs, local setup, safe mock data, or generated test files before asking the user.
@@ -58,18 +78,24 @@ Prefer to keep one run focused on one feature slice or one integration boundary.
 2. **Analyze**
    - Extract business capabilities, state transitions, permissions, source-of-truth systems, and acceptance criteria.
    - Compare PRD behavior with UI affordances.
+   - Mark each coverage inventory item as covered, partially covered, blocked, or out-of-E2E/specialty. Treat "not yet mapped to a case" as a gap, not as covered.
    - Stop and ask the user when contradictions, impossible states, missing expected results, or unclear data ownership affect the suite.
 
 3. **Design**
    - Group cases by business capability or integration boundary.
-   - Prefer a focused P0/P1 suite over exhaustive low-value coverage.
+   - For full release or deliverable acceptance plans, cover all PRD P0/P1 and explicit acceptance items. Prefer focused P0/P1 depth over low-value permutations, but do not omit a PRD requirement without recording why.
+   - For each PRD requirement that is not fully covered, either add a case or record it as blocked/out-of-scope with the concrete reason and user decision needed.
    - Include actor, preconditions, data setup, exact UI path, independent verification, expected result, evidence, cleanup, and blocking rule for each executable case.
    - Write the suite to one dedicated Markdown file using `references/templates.md`.
    - Use `references/examples.md` as the quality bar when cases risk becoming vague or when external-system verification is involved.
+   - Include a PRD coverage audit and a requirement-to-case matrix before asking for review. The user should be able to see whether the plan is full coverage or a deliberate slice without reading every case.
    - Include the inferred or provided test subject matrix and a mock/data scope record before execution.
+   - Mark high-risk items in a separate risk field or column instead of mixing risk into coverage status.
+   - When the user modifies cases, roles, scope, files, or verification expectations, update the mock/data plan and test subject matrix in the same file before asking for review again.
    - Ask the user to review or modify the file before executing.
 
 4. **Execute Only After Approval**
+   - Recheck and update independent verification sources before the first case runs.
    - Follow the approved UI paths exactly.
    - Use APIs/databases only for declared setup or independent verification after the UI action.
    - Capture evidence after major steps.
@@ -82,6 +108,7 @@ Prefer to keep one run focused on one feature slice or one integration boundary.
 ## Reference Routing
 
 - Read `references/templates.md` before generating a test plan, test case, review request, dependency request, blocking-bug question, or run summary.
+- Read `references/coverage.md` before generating or reviewing any PRD-backed full acceptance plan, and whenever the user asks whether coverage is complete.
 - Read `references/examples.md` when the requested feature involves external-system verification, multi-role behavior, or when generated cases might be too vague.
 - Read `references/workflow.md` when a task spans both design and execution, or when dependency discovery, test data planning, review gates, or result categories need more detail.
 - Read `references/execution-guardrails.md` before executing approved cases or deciding whether to continue after a bug.
@@ -99,7 +126,7 @@ Use bundled scripts when deterministic file layout or validation helps:
 
 - Run `python3 scripts/create_run_id.py "{feature}"` to generate a standard run ID.
 - Run `python3 scripts/scaffold_plan.py "{feature}" --run-id "{run_id}"` to create the default plan file and evidence directory.
-- Run `python3 scripts/validate_plan.py "{plan_path}"` before asking for review or before execution; fix missing actor, UI path, independent verification, evidence, or cleanup sections before proceeding.
+- Run `python3 scripts/validate_plan.py "{plan_path}"` before asking for review or before execution; fix missing actor, UI path, independent verification, evidence, cleanup, or PRD coverage audit sections before proceeding.
 
 ## Output Modes
 

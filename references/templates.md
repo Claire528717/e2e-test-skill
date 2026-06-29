@@ -32,22 +32,67 @@ Environment:
 - Evidence directory:
 
 Review Status:
-- Current status: Draft / Waiting for user review / Approved / Changes requested / Executed
+- Current status: Draft / Waiting for user case review / Approved for E2E execution / Changes requested / Executed
+- Review decision scope: Case quality and completeness only; not final release acceptance and not proof of execution readiness
 - Reviewer:
 - Review notes:
 - Last updated:
 
 Execution Authorization:
-- Current status: Not requested / Requested by user / Approved to run / Executed
+- Current status: Not requested / Requested by user / Verification refresh required / Approved to run / Executed
 - Authorized by:
 - Authorization notes:
 - Authorized at:
 
+Execution-Time Verification Refresh:
+- Current status: Not started / Updated after execution request / Blocked by missing access
+- Product URL checked:
+- Account/role matrix checked:
+- Database/API/log/external-system access checked:
+- Cleanup permission checked:
+- Plan updated before run: Yes / No
+
 Coverage Summary:
-| ID | Priority | Title | Actor | Main UI Path | Independent Verification | Status |
-|---|---|---|---|---|---|---|
+| ID | Priority | Risk | Title | Actor | Main UI Path | Independent Verification | Status |
+|---|---|---|---|---|---|---|---|
 ```
 
+
+## PRD Coverage Audit
+
+Use this section for every PRD-backed full acceptance plan. For focused-slice plans, include a shortened version that states what is intentionally uncovered.
+
+```markdown
+## PRD Coverage Audit
+
+Coverage Position:
+- Plan type: Full release acceptance / Focused slice / Prototype-only / Formal environment E2E
+- Coverage claim: Full PRD coverage / P0-P1 only / Selected workflow only
+- Not covered by this E2E plan:
+- Specialty tests required:
+- Blocked by product decisions or environment:
+
+Coverage Summary:
+| Status | Count | Meaning |
+|---|---:|---|
+| Covered | 0 | Has executable UI path and independent verification |
+| Partially covered | 0 | Missing a branch, role, state, or verification source |
+| Blocked | 0 | Cannot honestly plan or run until a dependency is resolved |
+| Out of E2E / specialty | 0 | Requires performance, security, load, accessibility, or other test type |
+| Out of release scope | 0 | PRD explicitly excludes or defers it |
+
+Requirement Coverage Matrix:
+| PRD Item | Acceptance Point | Risk | Coverage Status | Case IDs | Gap / Decision |
+|---|---|---|---|---|---|
+| PRD-001 | {requirement or checklist item} | High / Medium / Low | Covered / Partially covered / Blocked / Out of E2E / Out of release scope | {CASE-ID} | {missing branch, dependency, specialty test, or none} |
+
+Coverage Gate Notes:
+- Every Covered row must reference an existing executable case ID.
+- Every row must use exactly one coverage status; put high-risk and blocker details in Risk or Gap / Decision, not in the status cell.
+- Every high-risk Partially covered row must name the missing branch or verification source and either add a case or name the execution-time decision needed.
+- Every Blocked row must name the missing decision, account, environment, system, or permission.
+- Do not ask for review while an explicit P0/P1 PRD item is unmapped unless it is marked Blocked or Out of E2E with a concrete reason.
+```
 ## Dependency Discovery Result
 
 ```markdown
@@ -106,6 +151,13 @@ External System Data:
 
 User Must Provide Before Execution:
 - {only items that cannot be inferred or safely mocked}
+
+Data Sync Checklist:
+- Every case-added account/role/tenant/app is present in the Test Subject Matrix.
+- Every case-added product record is present in Product Data.
+- Every case-added upload or generated file is present in Files.
+- Every case-added external object or verification source is present in External System Data.
+- Cleanup rules cover every created record, token, file, and external object.
 
 Plain-Language Notes:
 - {which data is mocked and why}
@@ -185,7 +237,7 @@ Stop and ask the user if {condition}, because {impact}.
 ## User Review Request
 
 ```markdown
-I created/updated the dedicated E2E test file:
+I created/updated the dedicated E2E test file for case review:
 
 - File: {path}
 - Status: Waiting for user review
@@ -194,7 +246,7 @@ I created/updated the dedicated E2E test file:
 - Mock/test subjects: {summary}
 - User-provided dependencies still needed: {summary}
 
-Please review the cases and mock data plan. I will not start execution until you approve or tell me what to change.
+Please review case quality, PRD coverage completeness, high-risk markers, assumptions, and data needs. This review decides whether to execute E2E; it is not final release acceptance. I will not start execution until you approve or tell me what to change.
 ```
 
 ## Dependency Request
@@ -229,6 +281,7 @@ Impact:
 
 Recommended decision:
 - {pause for fix / allow me to fix this blocking bug then continue / skip affected cases / stop suite}
+- {whether this decision should apply only to this bug or to future blocking bugs in the current run}
 
 You can also authorize me to fix future blocking bugs in this run without asking again.
 
@@ -266,9 +319,10 @@ Cleanup Status:
 - {done/pending/manual cleanup needed}
 
 User Decisions Needed:
-- {whether to fix remaining bugs}
+- {whether to fix all remaining bugs now}
 - {whether to defer specific bugs}
 - {whether to rerun failed or blocked cases}
+- {whether to review the post-fix result before accepting the run}
 
 Residual Risks:
 - {untested paths, missing credentials, environment limitations}

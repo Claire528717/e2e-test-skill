@@ -36,9 +36,17 @@ Before asking the user, decide whether each missing item can be reasonably handl
 
 If a missing dependency cannot be honestly solved, explain it plainly. Do not work around it by bypassing UI actions, inventing credentials, writing database state that the UI should create, faking verification, or claiming that an unverified result passed.
 
+## User Decision Gates
+
+Use these gates in order:
+
+1. **Case review gate**: ask the user to review test case quality, PRD coverage completeness, high-risk markers, assumptions, and unified data needs. This gate decides whether to execute E2E; it is not final release acceptance and does not prove the execution environment is ready.
+2. **Blocking-bug gate**: during execution, ask whether to fix before continuing when a blocking bug prevents the case, blocks broad follow-on coverage, prevents required independent verification, or risks corrupting shared data.
+3. **Result-and-fix gate**: after execution, summarize evidence, bugs, cleanup, residual risks, and deferred items so the user can decide whether to fix all bugs, defer some bugs, rerun cases, and review the fix result.
+
 ## Execution Readiness Check
 
-Before promising real execution, confirm that the environment can:
+After the user gives an explicit instruction to execute E2E, refresh the plan before running cases. Confirm that the environment can:
 
 - Open the target UI or local app.
 - Log in with the needed accounts or create them safely.
@@ -47,7 +55,9 @@ Before promising real execution, confirm that the environment can:
 - Create, modify, or clean test data if the run needs it.
 - Avoid production writes unless the user has explicitly approved them.
 
-If any item is missing, stop at planning and return a dependency request instead of implying that execution is already possible.
+If any item is missing, update the test plan's dependency, data, and verification sections, then stop with a dependency request instead of implying that execution is already possible.
+
+Refresh each independent verification path at execution time because the user may now have provided a real URL, database, API, log, external-system access, or cleanup permission that was absent during case design. Replace vague entries such as query database/API with the concrete source, lookup key, field, and expected assertion when those details are available.
 
 Local test environments often do not come with ready-made users, roles, tenants, or permissions. For local execution, prefer creating or using isolated mock subjects when the project supports it. If the project cannot create or mock those subjects safely, mark the affected execution blocked and document exactly what is missing.
 
@@ -58,6 +68,16 @@ Prioritize cases by risk:
 - **P0**: revenue, critical workflow, permission boundary, persistence, external integration, source-of-truth consistency, or release-blocking risk.
 - **P1**: important boundary cases, alternate state transitions, common failure paths, or role differences.
 - **P2**: broad regression or low-risk coverage; include only when explicitly requested or when the suite has enough room.
+
+Coverage audit requirements:
+
+- Include a PRD coverage audit or requirement coverage matrix in every PRD-backed full acceptance plan.
+- Preserve PRD section numbers or stable checklist titles when available.
+- Mark each row as exactly one of covered, partially covered, blocked, out-of-E2E/specialty, or out of release scope.
+- Mark high-risk items in a separate risk column or high-risk register; do not mix risk or blocker labels into coverage status.
+- Do not count a nearby happy path as coverage for rejection, disabled actions, role differences, cross-tenant visibility, audit logs, duplicate prevention, retry, timeout, or failure states.
+- For every partially covered high-risk or P0/P1 row, add a case, add the missing branch to an existing case, or document the concrete missing dependency before review.
+- Put SLA, load, availability, security, and similar non-UI requirements into specialty rows rather than pretending a UI click verifies them.
 
 For each case, include:
 
@@ -92,6 +112,7 @@ Rules:
 - Treat inferred accounts, tenants, roles, permissions, apps, or files as planning requirements until the environment can create or provide them.
 - Do not start real execution from inferred subjects unless the environment supports creating or mocking those subjects.
 - Record the mock scope: which users, roles, tenants, permissions, apps, product records, files, and external objects are mocked; why they are needed; how they will be created; which cases use them; and how they will be cleaned up or preserved.
+- When the user requests any case addition, deletion, scope change, role change, file change, or verification change, update the unified mock/data plan, subject matrix, product data, files, external-system data, and cleanup rules in the same edit. Do not update only the case body.
 - For local testing, treat mock users, roles, tenants, permissions, and app ownership as the default path unless real test subjects are already provided.
 - Preserve failed or blocked case data until the user decides whether to inspect or clean it.
 - Clean passed-case data when safe, or document why it must be retained.
@@ -109,7 +130,7 @@ Before execution, create or update one dedicated test file that contains:
 - Full executable test cases.
 - User review status and requested changes.
 
-Ask the user to review this file. If the user changes cases, data, roles, or scope, update the same file and ask for approval again when changes materially affect execution.
+Ask the user to review this file for test quality and completeness before execution. If the user changes cases, data, roles, verification, or scope, update the same file including the unified data plan, then ask for approval again when changes materially affect execution.
 
 After execution, append results to the same file:
 
