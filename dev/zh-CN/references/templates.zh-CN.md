@@ -44,8 +44,34 @@
 - 授权备注：
 - 授权时间：
 
+PM 审核包：
+- 用户需要决策：批准执行 E2E / 要求修改 / 判定执行阻塞
+- 是否一页摘要：是 / 否
+
+决策摘要：
+- 推荐结论：批准 / 修改 / 阻塞
+- 本计划覆盖什么：
+- 覆盖缺口：
+- 本计划刻意不覆盖什么：
+- 主要阻塞：
+- 主要高风险项：
+- 当前需要用户决策什么：{最多 1-3 项}
+
+自动质量门禁：
+- 校验脚本：未运行 / 通过 / 失败
+- 阻塞性结构问题：
+- 请求评审前主 agent 已修复：
+
+二轮复核：
+- reviewer 结论：通过 / 需修改 / 阻塞 / 子 agent 不可用时需要人工复核
+- reviewer 输入范围：PM 审核包 / 决策摘要 / 覆盖审计 / mock-数据计划 / 阻塞项 / 3-5 个最高风险用例
+- 必须修改项：{最多 5 条；没有则写无}
+- 用户决策项：{最多 3 条；没有则写无}
+- reviewer 理由：{一小段}
+- 主 agent 处理：已修复 / 延期并说明原因 / 已移入用户决策 / 因子 agent 不可用标记为需要人工复核
+
 执行时独立核验刷新：
-- 当前状态：未开始 / 已在执行请求后更新 / 因缺少访问权限阻塞
+- 当前状态：未开始；仅在用户请求执行后填写 / 已在执行请求后更新 / 因缺少访问权限阻塞
 - 产品 URL 已检查：
 - 账号/角色矩阵已检查：
 - 数据库/API/日志/外部系统访问已检查：
@@ -130,12 +156,11 @@ Mock 范围：
 | M-001 | 用户 / 角色 / 租户 / 权限 / 应用 / 产品数据 / 文件 / 外部对象 | {用途} | 从 PRD 推导 / 生成 / 项目 fixture / 已提供 | {如何创建或提供} | {用例 ID} | 通过后删除 / 失败后保留 / 手动清理 |
 
 测试主体矩阵：
+只添加 PRD、用例设计和验证路径实际需要的主体。
+
 | 主体 ID | 账号/用户 | 角色 | 租户/域 | 应用/归属 | 权限用途 | 来源 |
 |---|---|---|---|---|---|---|
-| U-001 | {primary_actor_account} | {primary_role} | {tenant_or_scope_1} | {owned_resource_or_context} | {primary_workflow_permission} | 已提供 / 推导 / 待创建 |
-| U-002 | {reviewer_or_admin_account} | {review_or_admin_role} | {tenant_or_scope_1} | {review_context} | {approval_or_management_permission} | 已提供 / 推导 / 待创建 |
-| U-003 | {restricted_actor_account} | {restricted_role} | {tenant_or_scope_2} | {restricted_context} | {negative_or_isolation_permission} | 已提供 / 推导 / 待创建 |
-| U-004 | {system_or_integration_actor} | {system_or_integration_role} | {global_or_external_scope} | {integration_context} | {system_verification_permission} | 已提供 / 推导 / 待创建 |
+| U-001 | {account_or_user} | {role} | {tenant_or_scope} | {owned_resource_or_context} | {permission_needed_for_cases} | 已提供 / 推导 / 待创建 |
 
 产品数据：
 | 数据 ID | 对象类型 | 名称/键 | 创建者 | 被哪些用例使用 | 清理规则 |
@@ -246,7 +271,7 @@ UI 操作路径：
 - Mock/测试主体：{summary}
 - 仍需用户提供的依赖：{summary}
 
-请评审用例质量、PRD 覆盖完整性、高风险标记、假设和数据需求。本次评审用于决定是否执行 E2E，不是最终上线验收。在你批准或告诉我需要改什么之前，我不会开始执行。
+请先看 PM 审核包。你只需要根据决策摘要、自动门禁和 reviewer 结论决定是否执行 E2E、要求修改，或判定当前执行阻塞。详细用例是支撑材料，不要求你为了第一次决策通读全文。
 ```
 
 ## 依赖请求

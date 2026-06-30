@@ -44,8 +44,34 @@ Execution Authorization:
 - Authorization notes:
 - Authorized at:
 
+PM Review Packet:
+- User decision needed: Approve for E2E execution / Request changes / Mark execution blocked
+- One-page summary only: Yes / No
+
+Decision Digest:
+- Recommendation: Approve / Revise / Blocked
+- What this plan covers:
+- Coverage gaps:
+- What is intentionally not covered:
+- Top blockers:
+- Top high-risk items:
+- Decision needed now: {1-3 decisions only}
+
+Automated Quality Gate:
+- Validator: Not run / Passed / Failed
+- Blocking structural issues:
+- Main-agent fixes made before review:
+
+Second Review:
+- Reviewer verdict: Passed / Needs changes / Blocked / Manual review required when sub-agent is unavailable
+- Reviewer input scope: PM Review Packet / decision digest / coverage audit / mock-data plan / blocker list / 3-5 top high-risk cases
+- Must-fix issues: {up to 5, or none}
+- User decisions: {up to 3, or none}
+- Reviewer rationale: {one short paragraph}
+- Main-agent response: Fixed / Deferred with reason / Moved to user decision / Marked manual review required because sub-agent was unavailable
+
 Execution-Time Verification Refresh:
-- Current status: Not started / Updated after execution request / Blocked by missing access
+- Current status: Not started; fill only after the user requests execution / Updated after execution request / Blocked by missing access
 - Product URL checked:
 - Account/role matrix checked:
 - Database/API/log/external-system access checked:
@@ -130,12 +156,11 @@ Mock Scope:
 | M-001 | User / Role / Tenant / Permission / App / Product data / File / External object | {purpose} | Inferred from PRD / Generated / Project fixture / Provided | {how to create or provide it} | {case IDs} | Delete if passed / Preserve if failed / Manual cleanup |
 
 Test Subject Matrix:
+Add only the subjects required by the PRD, case design, and verification path.
+
 | Subject ID | Account/User | Role | Tenant/Domain | App/Ownership | Permission Purpose | Source |
 |---|---|---|---|---|---|---|
-| U-001 | {primary_actor_account} | {primary_role} | {tenant_or_scope_1} | {owned_resource_or_context} | {primary_workflow_permission} | Provided / Inferred / To create |
-| U-002 | {reviewer_or_admin_account} | {review_or_admin_role} | {tenant_or_scope_1} | {review_context} | {approval_or_management_permission} | Provided / Inferred / To create |
-| U-003 | {restricted_actor_account} | {restricted_role} | {tenant_or_scope_2} | {restricted_context} | {negative_or_isolation_permission} | Provided / Inferred / To create |
-| U-004 | {system_or_integration_actor} | {system_or_integration_role} | {global_or_external_scope} | {integration_context} | {system_verification_permission} | Provided / Inferred / To create |
+| U-001 | {account_or_user} | {role} | {tenant_or_scope} | {owned_resource_or_context} | {permission_needed_for_cases} | Provided / Inferred / To create |
 
 Product Data:
 | Data ID | Object Type | Name/Key | Created By | Used By Cases | Cleanup Rule |
@@ -246,7 +271,7 @@ I created/updated the dedicated E2E test file for case review:
 - Mock/test subjects: {summary}
 - User-provided dependencies still needed: {summary}
 
-Please review case quality, PRD coverage completeness, high-risk markers, assumptions, and data needs. This review decides whether to execute E2E; it is not final release acceptance. I will not start execution until you approve or tell me what to change.
+Please review the PM Review Packet first. You should only need the decision digest, automated gate, and reviewer findings to decide whether to execute E2E, request changes, or mark execution blocked. The detailed cases are supporting material, not required reading for the first decision.
 ```
 
 ## Dependency Request

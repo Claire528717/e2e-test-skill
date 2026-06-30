@@ -2,6 +2,18 @@
 
 Use this reference when the task spans both case design and execution, or when the user asks for detailed E2E planning.
 
+## Document Ownership
+
+Keep responsibilities separated:
+
+- `SKILL.md`: mandatory operating rules and reference routing only.
+- `references/workflow.md`: workflow details, dependency discovery, review gates, execution readiness, and result handling.
+- `references/coverage.md`: PRD coverage rules, status definitions, and requirement mapping quality bar.
+- `references/templates.md`: output structure and user-facing packet format.
+- `agents/reviewer.yaml`: second-review role, input boundary, checklist, and output contract.
+- `scripts/validate_plan.py`: deterministic structural checks that must pass before user review or execution.
+
+Do not duplicate long explanations across these files. When a rule can be enforced by a template field, reviewer checklist, or validator check, prefer that enforcement point over adding more prose to `SKILL.md`.
 ## Best Fit
 
 Use this skill after frontend/backend development and integration are complete, and after smoke testing has passed.
@@ -44,6 +56,8 @@ Use these gates in order:
 2. **Blocking-bug gate**: during execution, ask whether to fix before continuing when a blocking bug prevents the case, blocks broad follow-on coverage, prevents required independent verification, or risks corrupting shared data.
 3. **Result-and-fix gate**: after execution, summarize evidence, bugs, cleanup, residual risks, and deferred items so the user can decide whether to fix all bugs, defer some bugs, rerun cases, and review the fix result.
 
+Before the case review gate, create a **PM Review Packet**. The packet is the user's primary reading surface; detailed cases are supporting material. It must include decision digest, automated quality gate status, second-review status, coverage summary, blockers, and only the user decisions needed now.
+
 ## Execution Readiness Check
 
 After the user gives an explicit instruction to execute E2E, refresh the plan before running cases. Confirm that the environment can:
@@ -58,6 +72,10 @@ After the user gives an explicit instruction to execute E2E, refresh the plan be
 If any item is missing, update the test plan's dependency, data, and verification sections, then stop with a dependency request instead of implying that execution is already possible.
 
 Refresh each independent verification path at execution time because the user may now have provided a real URL, database, API, log, external-system access, or cleanup permission that was absent during case design. Replace vague entries such as query database/API with the concrete source, lookup key, field, and expected assertion when those details are available.
+
+When the plan is large or is a PRD-backed full acceptance plan, the main agent must spawn a separate reviewer sub-agent through the available multi-agent tool before showing the plan to the user. Give the reviewer only the decision digest, coverage audit, mock/data plan, blocker list, and the 3-5 highest-risk cases, then revise the plan using the reviewer output. Return only the go/no-go judgment, the top issues, and the decisions the user must make now. If the current AI tool cannot spawn or access a reviewer sub-agent, mark Second Review as Blocked or Manual review required, state the reason, and do not imply that an independent review happened.
+
+Reviewer output must be normalized before user review: fix must-fix issues, move blocked items into the decision digest, summarize non-blocking suggestions, and keep the visible reviewer result to verdict, must-fix issues, user decisions, rationale, and main-agent response.
 
 Local test environments often do not come with ready-made users, roles, tenants, or permissions. For local execution, prefer creating or using isolated mock subjects when the project supports it. If the project cannot create or mock those subjects safely, mark the affected execution blocked and document exactly what is missing.
 
@@ -122,6 +140,7 @@ Rules:
 
 Before execution, create or update one dedicated test file that contains:
 
+- PM review packet with decision digest, automated quality gate, second review, blockers, and user decisions.
 - Scope and assumptions.
 - Dependency discovery result.
 - Mock/data plan.
@@ -130,7 +149,7 @@ Before execution, create or update one dedicated test file that contains:
 - Full executable test cases.
 - User review status and requested changes.
 
-Ask the user to review this file for test quality and completeness before execution. If the user changes cases, data, roles, verification, or scope, update the same file including the unified data plan, then ask for approval again when changes materially affect execution.
+Ask the user to review this file for test quality and completeness before execution. If the user changes cases, data, roles, verification, or scope, update the same file including the unified data plan, then ask for approval again when changes materially affect execution. When the file is large, lead with the decision digest and the top issues instead of asking the user to inspect every case before deciding.
 
 After execution, append results to the same file:
 

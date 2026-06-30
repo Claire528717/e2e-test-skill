@@ -1,49 +1,42 @@
 ---
 name: e2e-test-skill
-description: "Design PRD-driven end-to-end acceptance test plans from product requirements and real UI sources. Use when Codex needs to turn a PRD, screenshots, prototype, HTML, frontend code, or other visual UI source into executable E2E test cases with realistic UI paths, mock/test data plans, review gates, and independent database/API/external-system verification. Also use for Chinese-language requests such as \u9a8c\u6536\u6d4b\u8bd5, \u7aef\u5230\u7aef\u6d4b\u8bd5, E2E \u7528\u4f8b, \u6d4b\u8bd5\u8ba1\u5212, or \u6839\u636e\u9875\u9762\u751f\u6210\u6d4b\u8bd5\u7528\u4f8b after development and integration are complete. Execute cases, collect evidence, handle bugs, and produce run summaries only after the user approves the plan and explicitly asks to run it."
+description: "Design PRD-driven end-to-end acceptance test plans from product requirements and real UI sources. Use when Codex needs to turn a PRD, screenshots, prototype, HTML, frontend code, or other visual UI source into executable E2E test cases with realistic UI paths, mock/test data plans, review gates, and independent database/API/external-system verification. Also use for Chinese-language requests such as 验收测试, 端到端测试, E2E 用例, 测试计划, or 根据页面生成测试用例 after development and integration are complete. Execute cases, collect evidence, handle bugs, and produce run summaries only after the user approves the plan and explicitly asks to run it."
 ---
 
 # E2E Test Skill
 
-## Default Behavior
+## Operating Rules
 
-Default to **case design only**. Create a dedicated E2E test plan file and stop for user review.
+Default to **case design only**. Create one dedicated E2E test plan file, then stop for user review. Start execution only after the user confirms or modifies the plan and explicitly asks to run E2E.
 
-Start execution only after the user confirms or modifies the test plan and then gives an explicit instruction to run it.
+Match the user's language for all visible prose in generated plans, summaries, and review requests. Use Chinese for Chinese prompts and English for English prompts. Keep file names, paths, case IDs, code tokens, and exact UI labels unchanged.
 
 Use three user decision gates:
 
-1. **Case review gate**: the user reviews test case quality, PRD coverage completeness, high-risk markers, assumptions, and data needs to decide whether to execute E2E. Do not frame this gate as final release acceptance or as approval that the execution environment is ready.
-2. **Blocking-bug gate**: during execution, stop for the user's decision when a blocking bug prevents the current case, blocks broad follow-on coverage, or makes required verification unreliable.
-3. **Result-and-fix gate**: after the run, show results, bugs, evidence, cleanup status, and residual risks so the user can decide whether to fix all bugs, defer some bugs, rerun failed/blocked cases, and review the final fix result.
+1. **Case review gate**: the user reviews case quality, PRD coverage completeness, high-risk markers, assumptions, and data needs to decide whether to execute E2E. Do not present this as final release acceptance or proof that the execution environment is ready.
+2. **Blocking-bug gate**: during execution, stop when a blocking bug prevents the current case, blocks broad follow-on coverage, or makes required verification unreliable.
+3. **Result-and-fix gate**: after execution, show results, bugs, evidence, cleanup status, and residual risks so the user can decide whether to fix, defer, rerun, or review post-fix results.
 
-For PRD-backed requests, default to **PRD coverage completeness**, not a representative happy-path suite. Extract the PRD's explicit must-have items, acceptance criteria, role permissions, business rules, state transitions, exception/empty states, data consistency rules, and declared non-functional or SLA items into a coverage audit before finalizing cases. Do not leave a PRD item only implied by a case; map every item to one of:
+Before the case review gate, produce a **PM Review Packet** at the top of the plan. It must include a concise decision digest, validator status, second-review status when required, coverage gaps, high-risk items, blockers, and the 1-3 user decisions needed now. Treat detailed cases as supporting material, not required first-pass reading.
 
-- Covered by executable E2E case.
-- Partially covered, with the missing branch named.
-- Blocked by missing decision, account, environment, system, or verification source.
-- Out of E2E scope / requires specialty test such as performance, security, or load testing.
+For PRD-backed full acceptance plans or plans with more than 10 executable cases:
 
-If the user asks for a narrow slice, clearly label the plan as a focused slice and include a brief uncovered-PRD summary. Do not present a focused slice as a full release acceptance plan.
+- Run `scripts/validate_plan.py` before asking for review and fix structural failures first.
+- Spawn a separate reviewer sub-agent before exposing the plan to the user. Give it only the PM review packet, decision digest, coverage audit, mock/data plan, blocker list, and 3-5 highest-risk cases.
+- Resolve reviewer must-fix issues, move blocked findings into user decisions, and summarize only the verdict, must-fix issues, user decisions, rationale, and main-agent response.
 
-Mark high-risk PRD items separately from coverage status. A high-risk item can still be covered, partially covered, blocked, or specialty; risk level explains business impact and execution priority, not whether the item is structurally valid.
+For PRD-backed requests, default to **complete PRD coverage**, not a representative happy-path suite. Every explicit must-have item, acceptance criterion, role/permission rule, business rule, state transition, exception/empty state, data consistency rule, and declared non-functional/SLA item must be mapped as covered, partially covered, blocked, out-of-E2E/specialty, or out of release scope. If the user asks for a narrow slice, label it as a focused slice and summarize what remains uncovered.
 
-This is not a 100% automatic testing tool. Think through whether missing dependencies can be reasonably discovered, created, or mocked in the current project before asking the user. If a critical dependency cannot be solved honestly, explain the gap, its impact, and the next decision in plain non-technical language. Do not bypass UI paths, fabricate evidence, or pretend a missing environment, account, permission, or verification source exists.
-
-If the user's request does not include accounts, roles, tenants, or permissions, infer a mock test subject matrix from the PRD for planning. For local test execution, assume these subjects usually must be mocked or created unless the user provides real test subjects. Record every mock subject, role, tenant, permission, data object, source, scope, and cleanup rule in the plan. Treat inferred mock subjects as data requirements before execution; do not pretend they already exist unless the environment can create or provide them.
-
-Run execution only when the current environment has the required URL, accounts or creatable test subjects, data permissions, and verification access.
-
-After the user explicitly asks to execute E2E, first refresh the execution readiness and independent verification plan against the now-provided URL, database/API/log/external-system access, account matrix, and cleanup permissions. Update the test plan before running if any verification path is vague, stale, unavailable, or no longer independent.
-
-## Core Rule
+Mark high-risk items separately from coverage status. Risk describes business impact and execution priority; it is not a coverage state.
 
 Keep UI operation and verification separate:
 
 - **UI operation path**: act like a real user through visible pages, navigation, forms, drawers, uploads, confirmations, and states.
 - **Independent verification**: after the UI action, verify persistence or integration through a database, API, log, queue, file, admin system, or external system.
 
-Do not replace a tested UI action with direct API calls, database writes, hidden DOM manipulation, synthetic DOM events, storage/session seeding, component internals, or automation-only shortcuts. Every tested action must start from the same visible affordance a real user would use; if no visible path exists, mark the case blocked or failed.
+Do not replace tested UI actions with direct API calls, database writes, hidden DOM manipulation, synthetic DOM events, storage/session seeding, component internals, or automation-only shortcuts. If no visible user path exists, mark the case blocked or failed.
+
+This is not a fully automatic testing tool. Discover, create, or mock missing dependencies when the project supports doing so safely. If a critical dependency cannot be solved honestly, explain the gap, impact, and next user decision in plain language. Never fabricate evidence, credentials, permissions, environments, or verification sources.
 
 ## Required Inputs
 
@@ -51,82 +44,65 @@ Require:
 
 - PRD or equivalent product requirements.
 - Visual UI source: screenshots, prototype, HTML, running product, or frontend code that exposes real operation paths.
-- If the user is a non-technical product manager, translate their goal into a short test brief first: target feature, PRD source, UI source, roles, environment, allowed test data actions, and what must be independently verified.
-- Explain dependency gaps, mock assumptions, blocked cases, and user decisions in plain language for non-technical users.
+- For non-technical product managers, first translate the goal into a short test brief: target feature, PRD source, UI source, roles, environment, allowed test data actions, and required independent verification.
 
 For execution, also require or discover:
 
 - Product URL or local run instructions.
-- Test accounts, roles, tenants, permissions, or permission to create them.
+- Test accounts, roles, tenants, permissions, or permission to create/mock them.
 - Database/API/log/external-system access for independent verification.
 - Permission boundaries for creating, editing, deleting, and cleaning test data.
 
-For planning, infer missing accounts, roles, tenants, permissions, apps, and test files as mock data when the PRD provides enough clues. Ask only for missing items that block planning or real execution. For local execution, prefer isolated mock data and clearly documented mock scope over asking non-technical users to manually provide users, roles, tenants, and permission records.
+During planning, infer missing non-sensitive accounts, roles, tenants, permissions, apps, files, and product records as mock data when the PRD provides enough clues. Treat inferred data as execution requirements until the environment can create or provide it. When the user modifies cases, roles, scope, files, or verification expectations, update the unified mock/data plan in the same file.
 
-Prefer to keep one run focused on one feature slice or one integration boundary.
+After the user explicitly asks to execute E2E, refresh URL, account matrix, verification access, and cleanup permissions before running. Update the plan first if any verification path is vague, stale, unavailable, or no longer independent.
 
 ## Workflow
 
 1. **Discover**
    - Read the PRD and UI source enough to identify actors, objects, states, rules, operation paths, and integrations.
-   - Build a PRD coverage inventory from must/shall/checklist items, acceptance criteria, role and permission matrices, business rules, state machines, exception and empty states, data fields, integration contracts, and non-functional requirements.
-   - Search the workspace for dependency clues before asking the user: docs, routes, API clients, `.env*`, mocks, fixtures, tests, schema/migrations, OpenAPI/Swagger, SDKs, and local run scripts.
-   - Summarize what was found and what is still missing.
-   - Decide whether each missing dependency can be reasonably solved by project docs, local setup, safe mock data, or generated test files before asking the user.
-   - If execution is requested, verify that the environment can actually perform UI interaction and independent verification before promising a run.
+   - Search the workspace for dependency clues before asking the user. Use `references/workflow.md` for the full discovery order.
+   - Summarize what was found, what is missing, and what can be mocked or created safely.
 
 2. **Analyze**
-   - Extract business capabilities, state transitions, permissions, source-of-truth systems, and acceptance criteria.
+   - Extract capabilities, state transitions, permissions, source-of-truth systems, and acceptance criteria.
    - Compare PRD behavior with UI affordances.
-   - Mark each coverage inventory item as covered, partially covered, blocked, or out-of-E2E/specialty. Treat "not yet mapped to a case" as a gap, not as covered.
-   - Stop and ask the user when contradictions, impossible states, missing expected results, or unclear data ownership affect the suite.
+   - Build the PRD coverage audit and stop for clarification when contradictions, impossible states, missing expected results, or unclear data ownership affect the suite.
 
 3. **Design**
    - Group cases by business capability or integration boundary.
-   - For full release or deliverable acceptance plans, cover all PRD P0/P1 and explicit acceptance items. Prefer focused P0/P1 depth over low-value permutations, but do not omit a PRD requirement without recording why.
-   - For each PRD requirement that is not fully covered, either add a case or record it as blocked/out-of-scope with the concrete reason and user decision needed.
    - Include actor, preconditions, data setup, exact UI path, independent verification, expected result, evidence, cleanup, and blocking rule for each executable case.
-   - Write the suite to one dedicated Markdown file using `references/templates.md`.
-   - Use `references/examples.md` as the quality bar when cases risk becoming vague or when external-system verification is involved.
-   - Include a PRD coverage audit and a requirement-to-case matrix before asking for review. The user should be able to see whether the plan is full coverage or a deliberate slice without reading every case.
-   - Include the inferred or provided test subject matrix and a mock/data scope record before execution.
-   - Mark high-risk items in a separate risk field or column instead of mixing risk into coverage status.
-   - When the user modifies cases, roles, scope, files, or verification expectations, update the mock/data plan and test subject matrix in the same file before asking for review again.
-   - Ask the user to review or modify the file before executing.
+   - Write the suite to one dedicated Markdown file using the template for the user's language.
+   - Put the PM Review Packet before detailed coverage and cases.
+   - Ask the user to review or modify the file before execution.
 
 4. **Execute Only After Approval**
-   - Recheck and update independent verification sources before the first case runs.
+   - Refresh execution readiness and independent verification sources.
    - Follow the approved UI paths exactly.
    - Use APIs/databases only for declared setup or independent verification after the UI action.
-   - Capture evidence after major steps.
-   - Append results to the same test plan file unless the user requests a separate report.
-   - Apply the stop rules in `references/execution-guardrails.md`.
+   - Capture evidence, including active UI screenshots for passed UI cases, append results to the same plan file, and apply `references/execution-guardrails.md`.
+   - After execution, run `scripts/validate_evidence.py "{plan_path}"` when evidence files are available; downgrade passed cases to inconclusive when required UI or independent evidence is missing.
 
 5. **Summarize**
    - Update the same file with pass/fail/blocked/skipped counts, evidence references, defects, fixes, deferred bugs, cleanup status, residual risks, and remaining user decisions.
 
 ## Reference Routing
 
-- Read `references/templates.md` before generating a test plan, test case, review request, dependency request, blocking-bug question, or run summary.
-- Read `references/coverage.md` before generating or reviewing any PRD-backed full acceptance plan, and whenever the user asks whether coverage is complete.
-- Read `references/examples.md` when the requested feature involves external-system verification, multi-role behavior, or when generated cases might be too vague.
-- Read `references/workflow.md` when a task spans both design and execution, or when dependency discovery, test data planning, review gates, or result categories need more detail.
+- Read `references/templates.md` for English output or `dev/zh-CN/references/templates.zh-CN.md` for Chinese output before generating a test plan, test case, review request, dependency request, blocking-bug question, or run summary.
+- Read `references/coverage.md` for English output or `dev/zh-CN/references/coverage.zh-CN.md` for Chinese output before generating or reviewing any PRD-backed full acceptance plan, and whenever the user asks whether coverage is complete.
+- Read `references/workflow.md` for English output or `dev/zh-CN/references/workflow.zh-CN.md` for Chinese output when dependency discovery, test data planning, review gates, execution readiness, or result categories need more detail.
+- Read `references/examples.md` when external-system verification, multi-role behavior, or vague case quality is a risk.
 - Read `references/execution-guardrails.md` before executing approved cases or deciding whether to continue after a bug.
 
-## Default File Layout
+## File Layout And Scripts
 
-- Write the suite to `e2e-test-plans/` by default when the user does not specify a path.
-- Use `e2e-test-plan-{feature}-{run_id}.md` as the plan filename.
-- Put screenshots and other evidence under `e2e-test-evidence/{run_id}/`.
-- Keep the plan file and evidence paths consistent throughout the run.
-
-## Scripts
-
-Use bundled scripts when deterministic file layout or validation helps:
-
-- Run `python3 scripts/create_run_id.py "{feature}"` to generate a standard run ID.
-- Run `python3 scripts/scaffold_plan.py "{feature}" --run-id "{run_id}"` to create the default plan file and evidence directory.
-- Run `python3 scripts/validate_plan.py "{plan_path}"` before asking for review or before execution; fix missing actor, UI path, independent verification, evidence, cleanup, or PRD coverage audit sections before proceeding.
+- Write plans to `e2e-test-plans/` by default.
+- Use `e2e-test-plan-{feature}-{run_id}.md` for plan files.
+- Put evidence under `e2e-test-evidence/{run_id}/`.
+- Run `python3 scripts/create_run_id.py "{feature}"` to generate a run ID when needed.
+- Run `python3 scripts/scaffold_plan.py "{feature}" --run-id "{run_id}"` to scaffold a plan and evidence directory when useful.
+- Run `python3 scripts/validate_plan.py "{plan_path}"` before review or execution; fix missing actor, UI path, independent verification, evidence, cleanup, PRD coverage audit, decision digest, automated gate, or second-review sections before proceeding.
+- Run `python3 scripts/validate_evidence.py "{plan_path}"` after execution to confirm passed UI cases have screenshot evidence and independent evidence under the declared evidence directory.
 
 ## Output Modes
 
@@ -138,3 +114,4 @@ Choose the narrowest mode that matches the request:
 - **Post-run report**: summarize an existing run log, preferably by updating the same file.
 
 Use Markdown by default. Use JSON or YAML only when useful for machine execution.
+
