@@ -30,7 +30,7 @@ Record evidence after each major step:
 
 - Current page, drawer, modal, tab, or visible state.
 - Submitted values.
-- Screenshots when available.
+- Active screenshots for passed UI cases; do not rely only on a test runner's failure-only screenshot setting.
 - Request, correlation, product record, database, and external-system IDs.
 - Relevant database/API/log response excerpts.
 - Cleanup status or reason cleanup was deferred.
@@ -38,6 +38,8 @@ Record evidence after each major step:
 Mark any case with missing critical evidence as inconclusive rather than passed.
 
 Evidence must include enough visible UI state to prove the user-facing path was used: the visible affordance before interaction, the visible submitted values or selected state when relevant, and the visible result after interaction. Evidence from hidden DOM state, internal selectors, automation APIs, network calls, or database/API verification alone is invalid for proving the UI operation path.
+
+For passed UI cases, save screenshots under the declared `e2e-test-evidence/{run_id}/` directory with names that include the case ID. Keep database/API/log evidence in the same directory. If a case has independent verification but no UI screenshot, report it as evidence-incomplete instead of fully passed.
 
 ## Bug Handling
 
@@ -65,3 +67,4 @@ If the user grants permission to automatically fix future blocking bugs in the c
 Non-blocking bugs may be recorded while testing continues, unless the user requested stop-on-any-bug.
 
 Do not silently work around blocking bugs.
+
