@@ -11,6 +11,7 @@ Use these examples as the quality bar for generated test cases. Do not copy the 
 - **Example 5: Basic data lifecycle** - Use for simple create/edit/delete flows, but split into separate cases when failure localization matters.
 - **Example 6: Permission boundary** - Use for role-specific actions, restricted visibility, and unauthorized access prevention.
 - **Example 7: Async state transition** - Use for queued/background jobs, delayed completion, and backend status verification; add timeout, failure-state, and retry checks when relevant.
+- **Example 8: Analytics and statistics dashboard** - Use for reporting, dashboard, ranking, and operations analytics scenarios where metrics must be proven from source business changes, not only viewed as static numbers.
 
 ## Example 1: External API Asset Creation
 
@@ -487,3 +488,87 @@ Independent Verification:
 2. Verify the status transitioned from queued to completed.
 3. Check the log or callback record if the PRD requires it.
 ```
+
+## Example 8: Analytics and Statistics Dashboard
+
+Pattern: Metrics proven from source business changes through UI/API/DB consistency.
+Use when: the PRD describes analytics, statistics, reporting, dashboards, rankings, filters, or operations monitoring.
+Do not copy blindly: replace the resource, metric names, filters, roles, and data sources with the product's actual model. Keep the pattern, not the domain.
+
+Bad case shape, too shallow:
+
+```markdown
+1. Open the analytics dashboard.
+2. Confirm metric cards and charts are visible.
+3. Call the summary API once and compare the current numbers.
+Expected: dashboard data is correct.
+```
+
+Why this is weak:
+- It only checks a static view.
+- It does not prove where the data came from.
+- It does not prove filters, ranking, empty states, or cross-scope isolation.
+- It can pass even if source business actions no longer update the statistics.
+
+Good suite shape:
+
+```markdown
+## Analytics Data Matrix
+
+| Data ID | Purpose | Time Range | Scope/Tenant | Category | Status | Type | Ranking Value | Created By | Used By |
+|---|---|---|---|---|---|---|---:|---|---|
+| M-001 | baseline total | today | Tenant A | Category X | active | API | 5 | SQL seed | ANALYTICS-E2E-001, 002 |
+| M-002 | cross-scope isolation | last 7 days | Tenant B | Category Y | active | API | 3 | SQL seed | ANALYTICS-E2E-003 |
+| M-003 | empty-state comparison | all | Tenant C | Category Z | none | none | 0 | isolated scope | ANALYTICS-E2E-004 |
+```
+
+```markdown
+### ANALYTICS-E2E-001 P0 Source business action updates the dashboard metric
+
+Purpose:
+Validate that creating and publishing a resource through the visible UI changes the analytics total and listed metrics by the expected V0 to V1 delta.
+
+Actor:
+- Operator: operator_a@example.test, Tenant A, permission to create and publish resources.
+
+Preconditions:
+- The dashboard can be opened from the product navigation.
+- Baseline data matrix M-001 exists and is traceable by the run ID.
+
+UI Operation Path:
+1. Open the analytics dashboard and select `All time` plus `Tenant A`.
+2. Record metric values V0 from the visible cards.
+3. Open the resource management page through navigation.
+4. Click `Create`, fill the generated run-ID name, and save through the visible form.
+5. Publish or approve the resource through the visible UI path required by the PRD.
+6. Return to the analytics dashboard and select the same filters.
+7. Record metric values V1.
+
+Independent Verification:
+1. Query the analytics API with the same range and scope; verify the API returns V1.
+2. Query the product database by the generated run-ID resource; verify status, type, scope, and timestamps match the expected metric bucket.
+3. Recalculate the expected delta directly from source tables or logs; verify V1 - V0 equals the expected change.
+
+Expected Results:
+- UI, analytics API, and database aggregation agree.
+- The changed metric moves by the expected delta, not just by a nonzero value.
+- Unrelated scope, category, or time-range metrics do not change.
+
+Evidence To Capture:
+- Dashboard screenshot before and after the source business action.
+- Resource creation/publish screenshot.
+- Analytics API response for V1.
+- Database aggregation excerpt showing the delta.
+
+Cleanup:
+- Remove or archive the generated resource when safe.
+- Preserve data if the metric mismatch needs investigation.
+
+Blocking Decision Rule:
+Stop and ask the user if the source business action cannot be performed through the UI or if the analytics API and database cannot be independently read, because static dashboard viewing is not enough to verify this requirement.
+```
+
+Result-reporting note:
+- SQL or API seed data may prepare the data matrix, but it must be reported as setup, not as proof that the UI business path passed.
+- If a case uses only API/DB checks after setup, label it API/DB-only or evidence-incomplete rather than a full UI-path pass.
+- If a validator failure is confirmed as a false positive, fix the validator or template and rerun it before asking the user to bypass the gate.

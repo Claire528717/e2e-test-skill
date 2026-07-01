@@ -14,6 +14,8 @@ Keep responsibilities separated:
 - `scripts/validate_plan.py`: deterministic structural checks that must pass before user review or execution.
 
 Do not duplicate long explanations across these files. When a rule can be enforced by a template field, reviewer checklist, or validator check, prefer that enforcement point over adding more prose to `SKILL.md`.
+
+When `scripts/validate_plan.py` appears to report false positives, do not treat user-approved bypass as the normal path. First classify the failures by rule, fix the validator or template when the rule is too blunt, rerun the validator, and leave only genuine plan gaps or explicitly accepted residual risks for the user decision.
 ## Best Fit
 
 Use this skill after frontend/backend development and integration are complete, and after smoke testing has passed.
@@ -109,6 +111,20 @@ For each case, include:
 - Cleanup.
 - Blocking decision rule.
 
+### Analytics and Statistics Coverage
+
+For analytics, statistics, reporting, dashboard, ranking, or operations-monitoring requirements, do not treat page rendering plus one static API check as full E2E coverage. A complete plan must show how source business data is created or changed, how the statistic is calculated, and how the UI reflects it.
+
+Include these checks when they apply:
+
+- A data matrix covering time ranges, tenant/domain or scope, business category, status/state, item type, ranking values, empty data, and error data.
+- Source business mutations such as create, submit, approve, publish, unpublish, subscribe, edit, or other domain actions, followed by V0 to V1 assertions on the affected metrics.
+- Filter consistency from visible UI control to request parameter to backend result to UI update, such as range, scope, status, category, or custom date filters.
+- Ranking and top-N behavior, including ties, fewer-than-N rows, empty results, and unsupported upstream metrics.
+- Cross-scope isolation, such as platform versus domain, tenant, role, or ownership boundaries.
+- Empty, loading, backend-error, invalid-filter, and return-navigation states.
+- Clear separation between SQL/API seed data and real UI business actions. Seed data can prepare coverage dimensions, but it does not replace the visible UI path for the business behavior under test.
+- Result summaries that distinguish full UI-path passes from API/DB-only verification, skipped upstream dependencies, blocked cases, and evidence-incomplete cases.
 ## Test Data Rules
 
 Use a run ID for every suite, such as `E2E-{feature}-{yyyyMMddHHmm}-{short_random}`.

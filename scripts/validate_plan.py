@@ -12,7 +12,7 @@ from pathlib import Path
 REQUIRED_SECTION_GROUPS = [
     (("UI Fidelity Requirement", "UI 保真要求"), "UI fidelity requirement"),
     (("Actor", "参与者"), "actor"),
-    (("UI Operation Path", "UI 操作路径"), "UI path"),
+    (("UI Operation Path", "UI 操作路径", "操作路径"), "UI path"),
     (("Independent Verification", "独立验证"), "independent verification"),
     (("Evidence To Capture", "需采集的证据"), "evidence"),
     (("Cleanup", "清理"), "cleanup"),
@@ -40,8 +40,9 @@ UI_FIDELITY_VIOLATIONS = {
 }
 
 LIST_PREFIX_PATTERN = re.compile(r"^\s*(?:[-*]\s+|\d+\.\s+)?")
-PLACEHOLDER_TOKEN_PATTERN = re.compile(r"\{\{[^{}]+\}\}|\{[^{}]+\}")
-CASE_ID_PATTERN = re.compile(r"\b[A-Z][A-Z0-9]+(?:-[A-Z0-9]+)*-\d{3,}\b")
+PLACEHOLDER_TOKEN_PATTERN = re.compile(r"\{\{[^{}]+\}\}|\{[A-Za-z0-9_ /-]+\}")
+CASE_ID_PATTERN = re.compile(r"\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+\b")
+CASE_HEADING_PATTERN = re.compile(r"^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+\b")
 COVERAGE_SECTION_PATTERN = re.compile(
     r"^##\s+(?:PRD Coverage Audit|PRD 全量覆盖审计|PRD 覆盖审计|Requirement Coverage Matrix|需求覆盖矩阵)\s*$",
     re.M,
@@ -95,6 +96,7 @@ NEGATION_TERMS = (
     "do not",
     "should not",
     "not allowed",
+    "no ",
     "禁止",
     "不能",
     "不允许",
@@ -124,6 +126,11 @@ INDEPENDENT_VERIFICATION_SIGNALS = (
     "log",
     "queue",
     "file",
+    "curl",
+    "http",
+    "request",
+    "response",
+    "status code",
     "admin",
     "external",
     "table",
@@ -135,6 +142,9 @@ INDEPENDENT_VERIFICATION_SIGNALS = (
     "日志",
     "队列",
     "文件",
+    "请求",
+    "响应",
+    "状态码",
     "后台",
     "外部系统",
     "原型数据快照",
@@ -171,6 +181,8 @@ def find_cases(markdown: str) -> list[CaseBlock]:
     cases: list[CaseBlock] = []
     for index, match in enumerate(matches):
         heading = match.group(1).strip()
+        if not is_case_heading(heading):
+            continue
         start = match.end()
         end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
         line = text[: match.start()].count("\n") + 1
@@ -178,8 +190,24 @@ def find_cases(markdown: str) -> list[CaseBlock]:
     return cases
 
 
+def is_case_id(value: str) -> bool:
+    if value.startswith("PRD-"):
+        return False
+    last_segment = value.rsplit("-", 1)[-1]
+    return any(char.isdigit() for char in last_segment)
+
+
+def is_case_heading(heading: str) -> bool:
+    match = CASE_HEADING_PATTERN.match(heading)
+    return bool(match and is_case_id(match.group(0)))
+
+
+def section_heading_regex(section: str) -> str:
+    return rf"{re.escape(section)}(?:\s*[\(\（][^\)\）]*[\)\）])?"
+
+
 def section_content(body: str, section: str) -> str | None:
-    heading = re.escape(section)
+    heading = section_heading_regex(section)
     pattern = re.compile(
         rf"^\s*{heading}[:：]\s*$([\s\S]*?)(?=^\s*(?:[A-Z][A-Za-z /-]+|[\u4e00-\u9fffA-Za-z /-]+)[:：]\s*$|\Z)",
         re.M,
@@ -221,7 +249,7 @@ def section_status(value: str | None) -> tuple[bool, bool]:
 
 
 def extract_case_ids(text: str) -> set[str]:
-    return {case_id for case_id in CASE_ID_PATTERN.findall(text) if not case_id.startswith("PRD-")}
+    return {case_id for case_id in CASE_ID_PATTERN.findall(text) if is_case_id(case_id)}
 
 def is_separator_row(row: str) -> bool:
     stripped = row.replace("|", "").strip()
@@ -299,6 +327,20 @@ def is_prohibition_line(line: str) -> bool:
     return any(term in lowered for term in NEGATION_TERMS)
 
 
+def is_negated_shortcut(line: str, shortcut: str) -> bool:
+    lowered = line.lower()
+    needle = shortcut.lower()
+    start = 0
+    while True:
+        index = lowered.find(needle, start)
+        if index == -1:
+            return False
+        context = lowered[max(0, index - 24):index]
+        if any(term in context for term in ("not ", "no ", "without ", "禁止", "不能", "不允许", "不得", "不要", "不直接", "不 ")):
+            return True
+        start = index + len(needle)
+
+
 def validate_ui_fidelity_violations(case: CaseBlock) -> list[str]:
     issues: list[str] = []
     for offset, line in enumerate(case.body.splitlines(), start=case.line + 1):
@@ -307,6 +349,8 @@ def validate_ui_fidelity_violations(case: CaseBlock) -> list[str]:
             continue
         for shortcut, reason in UI_FIDELITY_VIOLATIONS.items():
             if shortcut.lower() in lowered:
+                if is_negated_shortcut(line, shortcut):
+                    continue
                 issues.append(
                     f"Line {offset}: {case.heading} mentions UI fidelity violation '{shortcut}' ({reason})."
                 )
